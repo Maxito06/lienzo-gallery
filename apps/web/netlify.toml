@@ -4,8 +4,6 @@
 [[plugins]]
   package = "@netlify/angular-runtime"
 
-[[redirects]]
-  from = "/api/*"
-  to = "https://lienzo-api.onrender.com/:splat"
-  status = 200
-  force = true
+[[edge_functions]]
+  path = "/api/*"
+  function = "api-proxy"
