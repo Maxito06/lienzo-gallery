@@ -23,6 +23,19 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 
 - Fotos: hasta 8 por obra, mostradas inicialmente en un carrusel en la página de detalle (la forma de presentación se confirma en el diseño y puede cambiar) con la principal primero; el admin las sube, las ordena, elige la principal y las elimina. El tope de 8 se aplica en el panel y en la API.
 
+- Proxy /api/* mediante Edge Function propia en Netlify: las redirecciones de netlify.toml no se aplican a las páginas SSR de Angular, porque el SSR corre como Edge Function y las Edge Functions se ejecutan antes que las redirecciones; se comprobó que /api/health devolvía el mismo 404 de texto plano que una ruta inventada. Se declara en netlify.toml una Edge Function propia (`apps/web/netlify/edge-functions/api-proxy.ts`, bloque `[[edge_functions]]` con path `/api/*`) que reenvía a la API en Render quitando el prefijo `/api` y se adelanta a la del framework. Desde el navegador todo vive en un solo dominio, así que la cookie de sesión de la decisión de autenticación del admin es del mismo sitio. Falta afinar el reenvío de cuerpos POST cuando exista el login.
+
+## Resultados de la prueba de humo (TEC-13)
+
+- Front en Netlify (Angular 22 SSR): la ruta inicial se entrega prerenderizada (ng-server-context="ssg"). El SSR dinámico se verificará cuando exista una ruta no prerenderizada.
+- API en Render: primera llamada a la BD 1572 ms (local 864 ms). Memoria 113 MB en Render, 95 MB en local.
+- Arranque en frío de Render: 32,6 s directo y 23,96 s a través del proxy de Netlify (varía entre unos 24 y 33 s). Con la API despierta: 0,25 s directo y 0,58 s por el proxy. No se verificó el límite de espera de la Edge Function. Se mantiene la llamada de "despertar" con mensaje de espera al abrir el login.
+- Cookie __Host- HttpOnly Secure SameSite=Strict: el Set-Cookie atraviesa el proxy intacto y la API recibe la cookie de vuelta.
+- Caché: Netlify no cachea las respuestas dinámicas de la API que no declaran Cache-Control, y respeta Cache-Control: no-store. La API debe declarar Cache-Control explícito en respuestas sensibles.
+- Cloudinary: la subida directa firmada funciona. La API solo firma (SHA-1 con crypto de Node, parámetros ordenados alfabéticamente); el API_SECRET nunca sale del servidor. El preset lienzo_artworks deja los archivos en lienzo/artworks. Se aceptó una imagen de 7,8 MB: reducir en el navegador antes de subir y verificar el límite de tamaño del plan gratuito.
+- Netlify: detener los builds (Build status → Stop builds) para no gastar los 15 créditos por despliegue; activarlos solo cuando se necesite desplegar.
+- Pendientes: eliminar la tabla SmokeTest y su migración (TEC-05) y limpiar subidas huérfanas de Cloudinary (Fase 3).
+
 ## Pendiente de validar
 
 - Prueba de humo (TEC-13): arranque en frío de Render, caché de Netlify con Angular SSR y login a través del proxy (cookie y límite de 26 segundos).
