@@ -38,5 +38,9 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 
 ## Pendiente de validar
 
-- Prueba de humo (TEC-13): arranque en frío de Render, caché de Netlify con Angular SSR y login a través del proxy (cookie y límite de 26 segundos).
+- SSR dinámico en Netlify: hasta ahora solo se comprobó la ruta inicial prerenderizada. Verificar el renderizado en el servidor y la caché de las páginas SSR cuando exista una ruta no prerenderizada (por ejemplo, el detalle de una obra).
+- Límite de espera del proxy con un arranque en frío largo: por el proxy se midieron 24 s, pero Render llegó a 32,6 s en una medición directa. No se ha comprobado qué hace la Edge Function si la espera pasa de ahí. Mantener la llamada de "despertar" con mensaje de espera en el login.
+- Reenvío de cuerpos POST en el proxy: afinarlo y probarlo cuando exista el login.
+- Límite de tamaño por imagen del plan gratuito de Cloudinary: verificarlo antes de la fase de subida de obras.
 - Limpieza de subidas huérfanas en Cloudinary: se define en la fase 3.
+- Eliminar la tabla SmokeTest y su migración de Neon (TEC-05).
