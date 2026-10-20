@@ -35,6 +35,11 @@ export class AuthService {
       .pipe(finalize(() => this.user.set(null)));
   }
 
+  // Olvida al usuario sin llamar a la API (por ejemplo, cuando la sesión expiró)
+  clearSession(): void {
+    this.user.set(null);
+  }
+
   checkSession(): Observable<boolean> {
     return this.http.get<AdminResponse>('/api/auth/me').pipe(
       map((res) => {

@@ -74,7 +74,8 @@ export class Login {
     if (error.status === 429) {
       const seconds = Number(error.headers.get('Retry-After'));
       const minutes = Math.max(1, Math.ceil((Number.isFinite(seconds) ? seconds : 0) / 60));
-      return `Demasiados intentos. Vuelve a intentarlo en ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`;
+      const unit = minutes === 1 ? 'minuto' : 'minutos';
+      return `Demasiados intentos. Vuelve a intentarlo en ${minutes} ${unit}.`;
     }
     if (error.status === 0 || error.status >= 500) {
       return 'No se pudo conectar con el servidor. Inténtalo de nuevo.';

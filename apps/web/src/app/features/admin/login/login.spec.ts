@@ -87,6 +87,21 @@ describe('Login', () => {
     );
   });
 
+  it('uses the singular when the retry time is one minute', () => {
+    fillValidCredentials();
+    submit();
+
+    httpTesting
+      .expectOne('/api/auth/login')
+      .flush(
+        { message: 'Too many attempts' },
+        { status: 429, statusText: 'Too Many Requests', headers: { 'Retry-After': '30' } },
+      );
+    fixture.detectChanges();
+
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain('en 1 minuto.');
+  });
+
   it('navigates to /admin on successful login', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     fillValidCredentials();

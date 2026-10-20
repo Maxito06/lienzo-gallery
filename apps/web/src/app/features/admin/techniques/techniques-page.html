@@ -1,0 +1,74 @@
+<section>
+  <h1>Técnicas</h1>
+
+  @if (errorMessage(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  @if (!formOpen()) {
+    <!-- New technique -->
+    <button type="button" (click)="newItem()">Nueva técnica</button>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <h2>{{ editingId() ? 'Editar técnica' : 'Nueva técnica' }}</h2>
+
+      <div class="field">
+        <label for="nameEs">Nombre en español</label>
+        <input id="nameEs" type="text" formControlName="nameEs" maxlength="80" />
+        @if (form.controls.nameEs.touched && form.controls.nameEs.invalid) {
+          <p class="field-error">Escribe el nombre en español (máximo 80 caracteres).</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="nameEn">Nombre en inglés (opcional)</label>
+        <input id="nameEn" type="text" formControlName="nameEn" maxlength="80" />
+        @if (form.controls.nameEn.touched && form.controls.nameEn.invalid) {
+          <p class="field-error">El nombre es demasiado largo (máximo 80 caracteres).</p>
+        }
+      </div>
+
+      <!-- Save -->
+      <button type="submit" [disabled]="saving()">Guardar</button>
+      <!-- Cancel -->
+      <button type="button" (click)="cancel()">Cancelar</button>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Cargando…</p>
+  } @else if (items().length === 0) {
+    <p>Todavía no hay técnicas.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Nombre (ES)</th>
+          <th scope="col">Nombre (EN)</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr>
+            <td>{{ item.nameEs }}</td>
+            <td>{{ item.nameEn }}</td>
+            <td>
+              <!-- Edit -->
+              <button type="button" (click)="edit(item)">Editar</button>
+              @if (confirmingId() === item.id) {
+                <!-- Sure? Yes / No -->
+                <span>¿Seguro?</span>
+                <button type="button" (click)="confirmDelete(item.id)">Sí</button>
+                <button type="button" (click)="cancelDelete()">No</button>
+              } @else {
+                <!-- Delete -->
+                <button type="button" (click)="askDelete(item.id)">Eliminar</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

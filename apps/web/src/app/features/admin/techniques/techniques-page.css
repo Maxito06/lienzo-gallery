@@ -1,0 +1,25 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  max-width: 24rem;
+}
+
+.field-error,
+.error {
+  color: #b00020;
+  margin: 0;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.25rem 0.75rem;
+  border-bottom: 1px solid #ddd;
+}

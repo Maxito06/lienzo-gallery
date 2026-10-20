@@ -1,0 +1,16 @@
+<header class="bar">
+  <nav aria-label="Panel de administración">
+    <a routerLink="/admin/artworks" routerLinkActive="active">Obras</a>
+    <a routerLink="/admin/techniques" routerLinkActive="active">Técnicas</a>
+    <a routerLink="/admin/series" routerLinkActive="active">Series</a>
+  </nav>
+  <div class="session">
+    <span>{{ auth.user()?.email }}</span>
+    <!-- Log out -->
+    <button type="button" (click)="logout()">Cerrar sesión</button>
+  </div>
+</header>
+
+<main>
+  <router-outlet />
+</main>

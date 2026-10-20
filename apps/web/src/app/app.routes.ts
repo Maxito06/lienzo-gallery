@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 
 export const routes: Routes = [
+  // Va antes que 'admin' para que el guard no la capture
   {
     path: 'admin/login',
     loadComponent: () => import('./features/admin/login/login').then((m) => m.Login),
@@ -9,7 +10,24 @@ export const routes: Routes = [
   {
     path: 'admin',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/admin/dashboard/dashboard').then((m) => m.Dashboard),
+    loadComponent: () => import('./features/admin/layout/admin-layout').then((m) => m.AdminLayout),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'artworks' },
+      {
+        path: 'artworks',
+        loadComponent: () =>
+          import('./features/admin/artworks/artworks-page').then((m) => m.ArtworksPage),
+      },
+      {
+        path: 'techniques',
+        loadComponent: () =>
+          import('./features/admin/techniques/techniques-page').then((m) => m.TechniquesPage),
+      },
+      {
+        path: 'series',
+        loadComponent: () => import('./features/admin/series/series-page').then((m) => m.SeriesPage),
+      },
+    ],
   },
   // TEMPORAL: se reemplaza por la galería pública
   { path: '', redirectTo: 'admin', pathMatch: 'full' },

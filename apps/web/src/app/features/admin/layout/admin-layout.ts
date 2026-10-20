@@ -1,19 +1,21 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
 
-// Marcador de posición: las pantallas reales vendrán después
 @Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.html',
+  selector: 'app-admin-layout',
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  templateUrl: './admin-layout.html',
+  styleUrl: './admin-layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Dashboard {
+export class AdminLayout {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   protected logout(): void {
+    // Se vuelve al login aunque la petición falle
     this.auth
       .logout()
       .pipe(finalize(() => void this.router.navigate(['/admin/login'])))
