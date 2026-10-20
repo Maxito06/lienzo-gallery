@@ -1,0 +1,22 @@
+.login {
+  max-width: 24rem;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.field-error,
+.error {
+  color: #b00020;
+  margin: 0;
+}
+
+.notice {
+  color: #555;
+}
