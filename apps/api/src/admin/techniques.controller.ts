@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -14,11 +13,16 @@ import {
 } from '@nestjs/common';
 import { AdminGuard } from '../auth/admin.guard.js';
 import { slugify } from '../common/slugify.js';
-import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma.service.js';
+import {
+  asObject,
+  invalid,
+  isPrismaError,
+  parseNameEn,
+  parseNameEs,
+  parseUuid,
+} from './validation.js';
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const MAX_NAME_LENGTH = 80;
 const TECHNIQUE_SELECT = {
   id: true,
   slug: true,
@@ -43,40 +47,6 @@ function toDto(row: TechniqueRow) {
     nameEn: row.nameEn,
     artworkCount: row._count.artworks,
   };
-}
-
-function isPrismaError(error: unknown, code: string): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === code;
-}
-
-function invalid(): never {
-  throw new BadRequestException('Invalid request');
-}
-
-function parseId(id: string): string {
-  if (!UUID_REGEX.test(id)) throw new NotFoundException('Technique not found');
-  return id;
-}
-
-function asObject(body: unknown): Record<string, unknown> {
-  if (typeof body !== 'object' || body === null || Array.isArray(body)) invalid();
-  return body as Record<string, unknown>;
-}
-
-function parseNameEs(value: unknown): string {
-  if (typeof value !== 'string') return invalid();
-  const name = value.trim();
-  if (name.length < 1 || name.length > MAX_NAME_LENGTH) return invalid();
-  return name;
-}
-
-// Una cadena vacía tras recortar se guarda como null
-function parseNameEn(value: unknown): string | null {
-  if (value === null) return null;
-  if (typeof value !== 'string') return invalid();
-  const name = value.trim();
-  if (name.length > MAX_NAME_LENGTH) return invalid();
-  return name.length === 0 ? null : name;
 }
 
 @Controller('admin/techniques')
@@ -120,7 +90,7 @@ export class TechniquesController {
 
   @Patch(':id')
   async update(@Param('id') rawId: string, @Body() body: unknown) {
-    const id = parseId(rawId);
+    const id = parseUuid(rawId, 'Technique not found');
     const data = asObject(body);
     if (data.nameEs === undefined && data.nameEn === undefined) invalid();
 
@@ -145,7 +115,7 @@ export class TechniquesController {
   @Delete(':id')
   @HttpCode(204)
   async remove(@Param('id') rawId: string): Promise<void> {
-    const id = parseId(rawId);
+    const id = parseUuid(rawId, 'Technique not found');
     const row = await this.prisma.technique.findUnique({ where: { id }, select: TECHNIQUE_SELECT });
     if (!row) throw new NotFoundException('Technique not found');
     if (row._count.artworks > 0) throw new ConflictException('Technique is in use');

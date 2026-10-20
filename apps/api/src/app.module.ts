@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { SeriesController } from './admin/series.controller.js';
 import { TechniquesController } from './admin/techniques.controller.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
@@ -13,7 +14,13 @@ import { PrismaService } from './prisma.service.js';
 
 @Module({
   imports: [ConfigModule.forRoot()],
-  controllers: [AppController, HealthController, AuthController, TechniquesController],
+  controllers: [
+    AppController,
+    HealthController,
+    AuthController,
+    TechniquesController,
+    SeriesController,
+  ],
   providers: [
     AppService,
     PrismaService,
