@@ -5,30 +5,36 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpException,
+  HttpStatus,
+  type OnModuleInit,
   Post,
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import argon2 from 'argon2';
 import type { Request, Response } from 'express';
 import { PrismaService } from '../prisma.service.js';
+import { type AdminRequest, AdminGuard } from './admin.guard.js';
 import { SESSION_COOKIE_NAME, SESSION_COOKIE_OPTIONS, getCookie } from './cookies.js';
+import { LoginRateLimiter } from './login-rate-limiter.js';
 import { SessionsService } from './sessions.service.js';
 
 @Controller('auth')
-export class AuthController {
+export class AuthController implements OnModuleInit {
   // Hash falso para igualar tiempos cuando el email no existe
-  private dummyHash: Promise<string> | undefined;
+  private dummyHash!: string;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly sessions: SessionsService,
+    private readonly limiter: LoginRateLimiter,
   ) {}
 
-  private getDummyHash(): Promise<string> {
-    this.dummyHash ??= argon2.hash(randomBytes(16).toString('hex'));
-    return this.dummyHash;
+  async onModuleInit(): Promise<void> {
+    this.dummyHash = await argon2.hash(randomBytes(16).toString('hex'));
   }
 
   @Post('login')
@@ -46,9 +52,17 @@ export class AuthController {
       throw new BadRequestException('Invalid request');
     }
 
+    const retryAfter = this.limiter.retryAfterSeconds(email);
+    if (retryAfter > 0) {
+      res.setHeader('Retry-After', String(retryAfter));
+      throw new HttpException('Too many attempts', HttpStatus.TOO_MANY_REQUESTS);
+    }
+    // Se cuenta el intento antes de verificar para que las peticiones en paralelo no salten el límite
+    this.limiter.recordFailure(email);
+
     const user = await this.prisma.adminUser.findUnique({ where: { email } });
     if (!user) {
-      await argon2.verify(await this.getDummyHash(), password).catch(() => false);
+      await argon2.verify(this.dummyHash, password).catch(() => false);
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -62,6 +76,7 @@ export class AuthController {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    this.limiter.reset(email);
     const { token, expiresAt } = await this.sessions.create(user.id);
     res.cookie(SESSION_COOKIE_NAME, token, { ...SESSION_COOKIE_OPTIONS, expires: expiresAt });
     res.setHeader('Cache-Control', 'no-store');
@@ -80,15 +95,9 @@ export class AuthController {
   }
 
   @Get('me')
-  async me(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    res.setHeader('Cache-Control', 'no-store');
-    const token = getCookie(req.headers.cookie, SESSION_COOKIE_NAME);
-    if (!token) throw new UnauthorizedException();
-
-    const session = await this.sessions.validate(token);
-    if (!session) throw new UnauthorizedException();
-
-    const user = await this.prisma.adminUser.findUnique({ where: { id: session.adminUserId } });
+  @UseGuards(AdminGuard)
+  async me(@Req() req: AdminRequest) {
+    const user = await this.prisma.adminUser.findUnique({ where: { id: req.admin.adminUserId } });
     if (!user) throw new UnauthorizedException();
 
     return { admin: { id: user.id, email: user.email } };

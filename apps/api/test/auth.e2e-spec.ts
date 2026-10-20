@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma.service.js';
 
 const PASSWORD = 'correct-horse-battery';
+const CSRF = 'lienzo-web';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
@@ -47,6 +48,7 @@ describe('Auth (e2e)', () => {
   const login = async () => {
     const response = await request(app.getHttpServer())
       .post('/auth/login')
+      .set('X-Requested-With', CSRF)
       .send({ email, password: PASSWORD })
       .expect(200);
     const cookie = (setCookieOf(response)[0] as string).split(';')[0] as string;
@@ -73,10 +75,12 @@ describe('Auth (e2e)', () => {
   it('login rejects a wrong password and an unknown email with the same response', async () => {
     const wrongPassword = await request(app.getHttpServer())
       .post('/auth/login')
+      .set('X-Requested-With', CSRF)
       .send({ email, password: 'wrong-password' })
       .expect(401);
     const unknownEmail = await request(app.getHttpServer())
       .post('/auth/login')
+      .set('X-Requested-With', CSRF)
       .send({ email: `nobody-${randomUUID()}@example.com`, password: PASSWORD })
       .expect(401);
 
@@ -99,6 +103,7 @@ describe('Auth (e2e)', () => {
     for (const body of bodies) {
       const response = await request(app.getHttpServer())
         .post('/auth/login')
+        .set('X-Requested-With', CSRF)
         .send(body as object)
         .expect(400);
       expect(response.headers['set-cookie']).toBeUndefined();
@@ -139,6 +144,7 @@ describe('Auth (e2e)', () => {
     const { cookie } = await login();
     const response = await request(app.getHttpServer())
       .post('/auth/logout')
+      .set('X-Requested-With', CSRF)
       .set('Cookie', cookie)
       .expect(204);
     expect((setCookieOf(response)[0] as string).startsWith('__Host-session=;')).toBe(true);
@@ -147,6 +153,9 @@ describe('Auth (e2e)', () => {
   });
 
   it('logout without a cookie is harmless', async () => {
-    await request(app.getHttpServer()).post('/auth/logout').expect(204);
+    await request(app.getHttpServer())
+      .post('/auth/logout')
+      .set('X-Requested-With', CSRF)
+      .expect(204);
   });
 });
