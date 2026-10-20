@@ -6,6 +6,7 @@ export class FakeCloudinary {
   deleted: string[] = [];
   getResourceCalls: string[] = [];
   failWith?: Error;
+  failDeleteWith?: Error;
 
   signUpload() {
     return {
@@ -24,6 +25,7 @@ export class FakeCloudinary {
   }
 
   async deleteResources(publicIds: string[]): Promise<void> {
+    if (this.failDeleteWith) throw this.failDeleteWith;
     for (const id of publicIds) {
       this.deleted.push(id);
       this.resources.delete(id);

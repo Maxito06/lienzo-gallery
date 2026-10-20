@@ -6,6 +6,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  Logger,
   NotFoundException,
   Param,
   Patch,
@@ -14,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { AdminGuard } from '../auth/admin.guard.js';
 import { slugify } from '../common/slugify.js';
+import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 import { PrismaService } from '../prisma.service.js';
 import { DETAIL_INCLUDE, LIST_INCLUDE, toDetailDto, toListDto } from './artwork-dto.js';
 import { type ArtworkInput, parseArtworkInput } from './artwork-input.js';
@@ -24,7 +26,12 @@ const MAX_SLUG_ATTEMPTS = 5;
 @Controller('admin/artworks')
 @UseGuards(AdminGuard)
 export class ArtworksController {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(ArtworksController.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinary: CloudinaryService,
+  ) {}
 
   @Get()
   async list() {
@@ -95,16 +102,28 @@ export class ArtworksController {
     }
   }
 
-  // No borra los archivos en Cloudinary; se resuelve en HU-09
+  // Borra los archivos en Cloudinary en mejor esfuerzo, después de borrar la obra
   @Delete(':id')
   @HttpCode(204)
   async remove(@Param('id') rawId: string): Promise<void> {
     const id = parseUuid(rawId, 'Artwork not found');
+    const images = await this.prisma.artworkImage.findMany({
+      where: { artworkId: id },
+      select: { cloudinaryPublicId: true },
+    });
     try {
       await this.prisma.artwork.delete({ where: { id } });
     } catch (error) {
       if (isPrismaError(error, 'P2025')) throw new NotFoundException('Artwork not found');
       throw error;
+    }
+
+    const publicIds = images.map((image) => image.cloudinaryPublicId);
+    try {
+      await this.cloudinary.deleteResources(publicIds);
+    } catch {
+      // Los archivos quedan huérfanos y se limpiarán más adelante
+      this.logger.warn(`Could not delete files from storage: ${publicIds.join(', ')}`);
     }
   }
 
