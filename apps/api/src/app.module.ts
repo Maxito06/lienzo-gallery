@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { ArtworksController } from './admin/artworks.controller.js';
 import { SeriesController } from './admin/series.controller.js';
 import { TechniquesController } from './admin/techniques.controller.js';
 import { AppController } from './app.controller.js';
@@ -20,6 +21,7 @@ import { PrismaService } from './prisma.service.js';
     AuthController,
     TechniquesController,
     SeriesController,
+    ArtworksController,
   ],
   providers: [
     AppService,
