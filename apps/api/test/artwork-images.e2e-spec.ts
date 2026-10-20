@@ -264,4 +264,45 @@ describe('Artwork images (e2e)', () => {
     const response = await authed(http().post(`/admin/artworks/${artwork.id}/publish`)).expect(200);
     expect(response.body.isPublished).toBe(true);
   });
+
+  it('the database rejects two images with the same public id', async () => {
+    const first = await createArtwork();
+    const second = await createArtwork();
+    const publicId = newPublicId();
+
+    await prisma.artworkImage.create({
+      data: { artworkId: first.id, cloudinaryPublicId: publicId, position: 1 },
+    });
+    await expect(
+      prisma.artworkImage.create({
+        data: { artworkId: second.id, cloudinaryPublicId: publicId, position: 1 },
+      }),
+    ).rejects.toMatchObject({ code: 'P2002' });
+  });
+
+  it('the database rejects two images with the same position in one artwork', async () => {
+    const artwork = await createArtwork();
+
+    await prisma.artworkImage.create({
+      data: { artworkId: artwork.id, cloudinaryPublicId: newPublicId(), position: 1 },
+    });
+    await expect(
+      prisma.artworkImage.create({
+        data: { artworkId: artwork.id, cloudinaryPublicId: newPublicId(), position: 1 },
+      }),
+    ).rejects.toMatchObject({ code: 'P2002' });
+  });
+
+  it('simultaneous registrations of the same image produce one success and one conflict', async () => {
+    const artwork = await createArtwork();
+    const publicId = newPublicId();
+    fake.resources.set(publicId, goodResource(publicId));
+    const post = () =>
+      authed(http().post(`/admin/artworks/${artwork.id}/images`)).send({ publicId });
+
+    const responses = await Promise.all([post(), post()]);
+
+    expect(responses.map((r) => r.status).sort()).toEqual([201, 409]);
+    await expect(prisma.artworkImage.count({ where: { cloudinaryPublicId: publicId } })).resolves.toBe(1);
+  });
 });

@@ -86,7 +86,15 @@ export class ArtworkImagesController {
         },
       });
     } catch (error) {
-      if (isPrismaError(error, 'P2002')) throw new ConflictException('Image already registered');
+      if (isPrismaError(error, 'P2002')) {
+        // Distingue un duplicado de public id de una colisión de position por carrera
+        const existing = await this.prisma.artworkImage.findFirst({
+          where: { cloudinaryPublicId: publicId },
+          select: { id: true },
+        });
+        if (existing) throw new ConflictException('Image already registered');
+        throw new ConflictException('Concurrent change, please retry');
+      }
       throw error;
     }
 

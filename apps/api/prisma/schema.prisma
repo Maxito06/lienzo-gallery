@@ -66,14 +66,14 @@ model Artwork {
 model ArtworkImage {
   id                 String   @id @default(uuid()) @db.Uuid
   artworkId          String   @map("artwork_id") @db.Uuid
-  cloudinaryPublicId String   @map("cloudinary_public_id")
+  cloudinaryPublicId String   @unique @map("cloudinary_public_id")
   position           Int
   isPrimary          Boolean  @default(false) @map("is_primary")
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   artwork Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
 
-  @@index([artworkId])
+  @@unique([artworkId, position])
   @@map("artwork_image")
 }
 
