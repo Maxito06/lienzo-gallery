@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
@@ -163,6 +164,48 @@ export class ArtworksController {
       if (isPrismaError(error, 'P2025')) throw new NotFoundException('Artwork not found');
       throw error;
     }
+  }
+
+  // Publicar exige una imagen principal; es idempotente y conserva la fecha original
+  @Post(':id/publish')
+  @HttpCode(200)
+  async publish(@Param('id') rawId: string) {
+    const id = parseUuid(rawId, 'Artwork not found');
+    const artwork = await this.prisma.artwork.findUnique({
+      where: { id },
+      select: { id: true, _count: { select: { images: { where: { isPrimary: true } } } } },
+    });
+    if (!artwork) throw new NotFoundException('Artwork not found');
+    if (artwork._count.images === 0) {
+      throw new ConflictException('Artwork needs a primary image to be published');
+    }
+
+    await this.prisma.artwork.updateMany({
+      where: { id, publishedAt: null },
+      data: { publishedAt: new Date() },
+    });
+    return this.reload(id);
+  }
+
+  // Retirar vuelve la obra a borrador; es idempotente
+  @Post(':id/unpublish')
+  @HttpCode(200)
+  async unpublish(@Param('id') rawId: string) {
+    const id = parseUuid(rawId, 'Artwork not found');
+    const artwork = await this.prisma.artwork.findUnique({ where: { id }, select: { id: true } });
+    if (!artwork) throw new NotFoundException('Artwork not found');
+
+    await this.prisma.artwork.updateMany({
+      where: { id, publishedAt: { not: null } },
+      data: { publishedAt: null },
+    });
+    return this.reload(id);
+  }
+
+  private async reload(id: string) {
+    const row = await this.prisma.artwork.findUnique({ where: { id }, include: DETAIL_INCLUDE });
+    if (!row) throw new NotFoundException('Artwork not found');
+    return toDetailDto(row);
   }
 
   private async assertRelationsExist(input: ArtworkInput): Promise<void> {
