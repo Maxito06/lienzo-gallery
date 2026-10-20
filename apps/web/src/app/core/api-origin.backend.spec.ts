@@ -8,19 +8,21 @@ const env = (globalThis as unknown as { process: { env: Record<string, string | 
 
 describe('ApiOriginBackend', () => {
   const originalOrigin = env['API_ORIGIN'];
-  let handle: ReturnType<typeof vi.fn>;
+  let handle: ReturnType<typeof vi.spyOn>;
   let backend: ApiOriginBackend;
 
   beforeEach(() => {
     delete env['API_ORIGIN'];
-    handle = vi.fn().mockReturnValue(of(new HttpResponse({ status: 200 })));
-    TestBed.configureTestingModule({
-      providers: [ApiOriginBackend, { provide: FetchBackend, useValue: { handle } }],
-    });
+    // Se espía el handle real de FetchBackend para no hacer peticiones
+    handle = vi
+      .spyOn(FetchBackend.prototype, 'handle')
+      .mockReturnValue(of(new HttpResponse({ status: 200 })));
+    TestBed.configureTestingModule({ providers: [ApiOriginBackend] });
     backend = TestBed.inject(ApiOriginBackend);
   });
 
   afterEach(() => {
+    handle.mockRestore();
     if (originalOrigin === undefined) {
       delete env['API_ORIGIN'];
     } else {
@@ -29,6 +31,10 @@ describe('ApiOriginBackend', () => {
   });
 
   const sentUrl = () => (handle.mock.calls[0][0] as HttpRequest<unknown>).url;
+
+  it('is an instance of FetchBackend', () => {
+    expect(backend).toBeInstanceOf(FetchBackend);
+  });
 
   it('rewrites /api/ URLs to the API origin', () => {
     backend.handle(new HttpRequest('GET', '/api/public/artworks')).subscribe();
