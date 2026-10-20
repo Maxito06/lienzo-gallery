@@ -1,0 +1,121 @@
+<header>
+  <h1>Lienzo</h1>
+  <p>Galería de arte (obras de dominio público)</p>
+</header>
+
+<main>
+  <form class="filters" aria-label="Filtros de la galería" (submit)="$event.preventDefault()">
+    <label>
+      Técnica
+      <select #techniqueSelect (change)="setFilter('technique', techniqueSelect.value)">
+        <option value="" [selected]="!filters().technique">Todas</option>
+        @for (option of techniques(); track option.slug) {
+          <option [value]="option.slug" [selected]="option.slug === filters().technique">
+            {{ option.nameEs }}
+          </option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Serie
+      <select #seriesSelect (change)="setFilter('series', seriesSelect.value)">
+        <option value="" [selected]="!filters().series">Todas</option>
+        @for (option of seriesOptions(); track option.slug) {
+          <option [value]="option.slug" [selected]="option.slug === filters().series">
+            {{ option.nameEs }}
+          </option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Estado
+      <select #statusSelect (change)="setFilter('status', statusSelect.value)">
+        <option value="" [selected]="!filters().status">Todos</option>
+        @for (status of statuses; track status) {
+          <option [value]="status" [selected]="status === filters().status">
+            {{ statusLabels[status] }}
+          </option>
+        }
+      </select>
+    </label>
+
+    @if (hasActiveFilters()) {
+      <!-- Clear filters -->
+      <button type="button" (click)="clearFilters()">Limpiar filtros</button>
+    }
+  </form>
+
+  @switch (state().kind) {
+    @case ('loading') {
+      <p>Cargando obras…</p>
+    }
+    @case ('error') {
+      <div role="alert">
+        <p>No se pudo cargar la galería. Inténtalo de nuevo.</p>
+        <!-- Retry -->
+        <button type="button" (click)="retry()">Reintentar</button>
+      </div>
+    }
+    @case ('ready') {
+      @if (state(); as current) {
+        @if (current.kind === 'ready') {
+          @if (current.data.items.length === 0) {
+            <p>No hay obras que coincidan con los filtros.</p>
+            @if (filters().page > 1) {
+              <!-- Go to page 1 -->
+              <a routerLink="." [queryParams]="{ page: null }" queryParamsHandling="merge">
+                Ir a la primera página
+              </a>
+            }
+          } @else {
+            <ul class="grid">
+              @for (item of current.data.items; track item.slug) {
+                <li>
+                  <!-- Artwork detail (view artwork) -->
+                  <a [routerLink]="['/obras', item.slug]">
+                    <article>
+                      @if (imageUrl(item); as url) {
+                        <img [src]="url" [alt]="item.title || 'Obra sin título'" loading="lazy" />
+                      } @else {
+                        <div class="no-image">Sin imagen</div>
+                      }
+                      <h2>{{ item.title }}</h2>
+                      <p>{{ item.technique.nameEs }}@if (item.year) {, {{ item.year }}}</p>
+                      <p>{{ statusLabels[item.status] }}</p>
+                      @if (item.isDemo) {
+                        <!-- Proyecto de portafolio con obras de dominio público -->
+                        <p class="demo">Obra de demostración</p>
+                      }
+                    </article>
+                  </a>
+                </li>
+              }
+            </ul>
+
+            <nav aria-label="Paginación" class="pagination">
+              <!-- Previous -->
+              <button
+                type="button"
+                [disabled]="current.data.page <= 1"
+                (click)="goToPage(current.data.page - 1)"
+              >
+                Anterior
+              </button>
+              <span>Página {{ current.data.page }} de {{ current.data.totalPages }}</span>
+              <!-- Next -->
+              <button
+                type="button"
+                [disabled]="current.data.page >= current.data.totalPages"
+                (click)="goToPage(current.data.page + 1)"
+              >
+                Siguiente
+              </button>
+            </nav>
+          }
+        }
+      }
+    }
+  }
+</main>

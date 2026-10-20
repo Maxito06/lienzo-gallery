@@ -39,7 +39,10 @@ export const routes: Routes = [
       },
     ],
   },
-  // TEMPORAL: se reemplaza por la galería pública
-  { path: '', redirectTo: 'admin', pathMatch: 'full' },
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./features/gallery/gallery-page').then((m) => m.GalleryPage),
+  },
   { path: '**', redirectTo: '' },
 ];
