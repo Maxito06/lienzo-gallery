@@ -44,5 +44,10 @@ export const routes: Routes = [
     pathMatch: 'full',
     loadComponent: () => import('./features/gallery/gallery-page').then((m) => m.GalleryPage),
   },
+  {
+    path: 'obras/:slug',
+    loadComponent: () =>
+      import('./features/artwork-detail/artwork-detail-page').then((m) => m.ArtworkDetailPage),
+  },
   { path: '**', redirectTo: '' },
 ];

@@ -37,6 +37,30 @@ export interface PublicArtworkPage {
   totalPages: number;
 }
 
+export interface PublicArtworkImage {
+  cloudinaryPublicId: string;
+  position: number;
+  isPrimary: boolean;
+}
+
+// widthCm y heightCm llegan como número (la API los convierte), o null
+export interface PublicArtworkDetail {
+  slug: string;
+  title: string;
+  status: ArtworkStatus;
+  year: number | null;
+  isDemo: boolean;
+  widthCm: number | null;
+  heightCm: number | null;
+  referencePriceCop: number | null;
+  descriptionEs: string | null;
+  descriptionEn: string | null;
+  publishedAt: string | null;
+  technique: PublicNamedRef;
+  series: PublicNamedRef | null;
+  images: PublicArtworkImage[];
+}
+
 export interface PublicArtworkQuery {
   page?: number;
   pageSize?: number;
@@ -58,6 +82,12 @@ export class PublicCatalogService {
       }
     }
     return this.withTimeout(this.http.get<PublicArtworkPage>('/api/public/artworks', { params }));
+  }
+
+  getArtwork(slug: string): Observable<PublicArtworkDetail> {
+    return this.withTimeout(
+      this.http.get<PublicArtworkDetail>(`/api/public/artworks/${encodeURIComponent(slug)}`),
+    );
   }
 
   getTechniques(): Observable<PublicFilterOption[]> {

@@ -36,4 +36,9 @@ describe('PublicCatalogService', () => {
     service.getSeries().subscribe();
     httpTesting.expectOne('/api/public/series').flush([]);
   });
+
+  it('requests the artwork by slug', () => {
+    service.getArtwork('noche-estrellada').subscribe();
+    httpTesting.expectOne('/api/public/artworks/noche-estrellada').flush({});
+  });
 });

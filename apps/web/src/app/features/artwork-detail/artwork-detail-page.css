@@ -1,0 +1,38 @@
+.main-image,
+.no-image {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.no-image {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+  background: #eee;
+}
+
+.thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+.thumbnails img {
+  display: block;
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+}
+
+.thumbnails [aria-current='true'] {
+  outline: 2px solid currentColor;
+}
+
+.description {
+  white-space: pre-line;
+}
