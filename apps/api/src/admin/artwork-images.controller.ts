@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import {
   BadGatewayException,
   BadRequestException,
@@ -26,7 +27,8 @@ export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 export const MAX_IMAGE_PIXELS = 25_000_000;
 export const ALLOWED_IMAGE_FORMATS = ['jpg', 'png', 'webp'];
 
-const PUBLIC_ID_REGEX = /^lienzo\/artworks\/[A-Za-z0-9_-]{1,100}$/;
+const PUBLIC_ID_PREFIX = 'lienzo/artworks/';
+export const PUBLIC_ID_REGEX = /^lienzo\/artworks\/[A-Za-z0-9_-]{1,100}$/;
 
 @Controller('admin/artworks/:artworkId/images')
 @UseGuards(AdminGuard)
@@ -38,13 +40,15 @@ export class ArtworkImagesController {
     private readonly cloudinary: CloudinaryService,
   ) {}
 
-  // Autorización corta firmada para que el navegador suba directo a Cloudinary
+  // Autorización corta firmada para que el navegador suba directo a Cloudinary.
+  // El public_id lo genera el servidor y va dentro de la firma.
   @Post('sign')
   @HttpCode(200)
   async sign(@Param('artworkId') rawId: string) {
     const artworkId = parseUuid(rawId, 'Artwork not found');
     await this.assertCanAddImage(artworkId);
-    return this.fromStorage(() => this.cloudinary.signUpload());
+    const publicId = `${PUBLIC_ID_PREFIX}${randomBytes(16).toString('base64url')}`;
+    return this.fromStorage(() => this.cloudinary.signUpload(publicId));
   }
 
   // Registra una foto ya subida, verificándola contra Cloudinary antes de guardarla

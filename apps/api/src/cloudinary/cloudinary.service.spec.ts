@@ -4,6 +4,7 @@ import { CloudinaryNotConfiguredError, CloudinaryService } from './cloudinary.se
 
 const SECRET = 'super-secret-value';
 const API_KEY = '123456789';
+const PUBLIC_ID = 'lienzo/artworks/abc123';
 
 function stubConfig() {
   vi.stubEnv('CLOUDINARY_CLOUD_NAME', 'test-cloud');
@@ -31,10 +32,10 @@ describe('CloudinaryService', () => {
     const now = new Date('2026-01-01T12:00:00Z');
     const timestamp = Math.floor(now.getTime() / 1000);
     const expected = createHash('sha1')
-      .update(`timestamp=${timestamp}&upload_preset=test-preset${SECRET}`)
+      .update(`public_id=${PUBLIC_ID}&timestamp=${timestamp}&upload_preset=test-preset${SECRET}`)
       .digest('hex');
 
-    const result = service.signUpload(now);
+    const result = service.signUpload(PUBLIC_ID, now);
 
     expect(result).toEqual({
       cloudName: 'test-cloud',
@@ -42,8 +43,23 @@ describe('CloudinaryService', () => {
       uploadPreset: 'test-preset',
       timestamp,
       signature: expected,
+      publicId: PUBLIC_ID,
     });
     expect(JSON.stringify(result)).not.toContain(SECRET);
+  });
+
+  it('signs public_id, timestamp and upload_preset in alphabetical order', () => {
+    const now = new Date('2026-03-04T05:06:07Z');
+    const timestamp = Math.floor(now.getTime() / 1000);
+    const toSign = ['public_id', 'timestamp', 'upload_preset'];
+    expect([...toSign].sort()).toEqual(toSign);
+    const expected = createHash('sha1')
+      .update(
+        `public_id=lienzo/artworks/xyz&timestamp=${timestamp}&upload_preset=test-preset` + SECRET,
+      )
+      .digest('hex');
+
+    expect(service.signUpload('lienzo/artworks/xyz', now).signature).toBe(expected);
   });
 
   it('throws CloudinaryNotConfiguredError when a variable is missing or empty', () => {
@@ -54,11 +70,11 @@ describe('CloudinaryService', () => {
       'CLOUDINARY_UPLOAD_PRESET',
     ]) {
       vi.stubEnv(name, '');
-      expect(() => service.signUpload()).toThrow(CloudinaryNotConfiguredError);
+      expect(() => service.signUpload(PUBLIC_ID)).toThrow(CloudinaryNotConfiguredError);
       stubConfig();
     }
     vi.stubEnv('CLOUDINARY_API_KEY', undefined);
-    expect(() => service.signUpload()).toThrow(CloudinaryNotConfiguredError);
+    expect(() => service.signUpload(PUBLIC_ID)).toThrow(CloudinaryNotConfiguredError);
   });
 
   it('getResource maps the response fields and sends basic auth', async () => {

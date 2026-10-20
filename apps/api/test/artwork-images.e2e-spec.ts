@@ -5,6 +5,7 @@ import request from 'supertest';
 import {
   MAX_IMAGE_BYTES,
   MAX_IMAGES_PER_ARTWORK,
+  PUBLIC_ID_REGEX,
 } from '../src/admin/artwork-images.controller.js';
 import { AppModule } from '../src/app.module.js';
 import {
@@ -122,13 +123,26 @@ describe('Artwork images (e2e)', () => {
     const response = await authed(http().post(`/admin/artworks/${artwork.id}/images/sign`)).expect(200);
 
     expect(Object.keys(response.body).sort()).toEqual(
-      ['apiKey', 'cloudName', 'signature', 'timestamp', 'uploadPreset'].sort(),
+      ['apiKey', 'cloudName', 'publicId', 'signature', 'timestamp', 'uploadPreset'].sort(),
     );
     expect(JSON.stringify(response.body).toLowerCase()).not.toContain('secret');
 
     for (const id of [randomUUID(), 'abc']) {
       await authed(http().post(`/admin/artworks/${id}/images/sign`)).expect(404);
     }
+  });
+
+  it('returns a unique publicId with the images prefix', async () => {
+    const artwork = await createArtwork();
+    const sign = () => authed(http().post(`/admin/artworks/${artwork.id}/images/sign`)).expect(200);
+
+    const first = (await sign()).body.publicId as string;
+    const second = (await sign()).body.publicId as string;
+
+    expect(first).toMatch(PUBLIC_ID_REGEX);
+    expect(second).toMatch(PUBLIC_ID_REGEX);
+    expect(first.startsWith('lienzo/artworks/')).toBe(true);
+    expect(first).not.toBe(second);
   });
 
   it('sign refuses when the artwork already has 8 images', async () => {

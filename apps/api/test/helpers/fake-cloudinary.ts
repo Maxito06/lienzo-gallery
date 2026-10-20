@@ -8,13 +8,14 @@ export class FakeCloudinary {
   failWith?: Error;
   failDeleteWith?: Error;
 
-  signUpload() {
+  signUpload(publicId: string) {
     return {
       cloudName: 'test-cloud',
       apiKey: 'test-key',
       uploadPreset: 'test-preset',
       timestamp: 1700000000,
       signature: 'test-signature',
+      publicId,
     };
   }
 

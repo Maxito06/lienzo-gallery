@@ -39,12 +39,14 @@ export class CloudinaryService {
     return `Basic ${Buffer.from(`${config.apiKey}:${config.apiSecret}`).toString('base64')}`;
   }
 
-  // Firma de subida: parámetros en orden alfabético seguidos del secreto
-  signUpload(now: Date = new Date()) {
+  // Firma de subida: public_id, timestamp y upload_preset en orden alfabético seguidos del secreto
+  signUpload(publicId: string, now: Date = new Date()) {
     const config = this.getConfig();
     const timestamp = Math.floor(now.getTime() / 1000);
     const signature = createHash('sha1')
-      .update(`timestamp=${timestamp}&upload_preset=${config.uploadPreset}${config.apiSecret}`)
+      .update(
+        `public_id=${publicId}&timestamp=${timestamp}&upload_preset=${config.uploadPreset}${config.apiSecret}`,
+      )
       .digest('hex');
     return {
       cloudName: config.cloudName,
@@ -52,6 +54,7 @@ export class CloudinaryService {
       uploadPreset: config.uploadPreset,
       timestamp,
       signature,
+      publicId,
     };
   }
 
