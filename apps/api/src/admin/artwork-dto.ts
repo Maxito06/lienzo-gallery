@@ -27,6 +27,7 @@ export function summary(row: ListRow | DetailRow) {
     status: row.status,
     isPublished: row.publishedAt !== null,
     publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
+    isDemo: row.isDemo,
     year: row.year,
     widthCm: row.widthCm ? row.widthCm.toNumber() : null,
     heightCm: row.heightCm ? row.heightCm.toNumber() : null,

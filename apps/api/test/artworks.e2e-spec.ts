@@ -199,6 +199,18 @@ describe('Admin artworks (e2e)', () => {
       expect(foundDraft?.series).toBeNull();
     });
 
+    it('includes isDemo false in the list and detail of artworks created through the API', async () => {
+      const artwork = await createArtwork({ title: `Not demo ${randomUUID()}`, techniqueId });
+      expect(artwork.isDemo).toBe(false);
+
+      const list = await authed(http().get(URL)).expect(200);
+      const item = (list.body as ArtworkBody[]).find((entry) => entry.id === artwork.id);
+      expect(item?.isDemo).toBe(false);
+
+      const detail = await authed(http().get(`${URL}/${artwork.id}`)).expect(200);
+      expect(detail.body.isDemo).toBe(false);
+    });
+
     it('returns an artwork with its images ordered by position', async () => {
       const artwork = await createArtwork({ title: `Images ${randomUUID()}`, techniqueId });
       await prisma.artworkImage.create({
