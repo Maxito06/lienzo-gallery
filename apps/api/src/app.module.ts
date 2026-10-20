@@ -12,6 +12,8 @@ import { CsrfGuard } from './auth/csrf.guard.js';
 import { LoginRateLimiter } from './auth/login-rate-limiter.js';
 import { SessionsService } from './auth/sessions.service.js';
 import { PrismaService } from './prisma.service.js';
+import { PublicCatalogService } from './public/public-catalog.service.js';
+import { PublicController } from './public/public.controller.js';
 
 @Module({
   imports: [ConfigModule.forRoot()],
@@ -22,12 +24,14 @@ import { PrismaService } from './prisma.service.js';
     TechniquesController,
     SeriesController,
     ArtworksController,
+    PublicController,
   ],
   providers: [
     AppService,
     PrismaService,
     SessionsService,
     LoginRateLimiter,
+    PublicCatalogService,
     { provide: APP_GUARD, useClass: CsrfGuard },
   ],
 })
