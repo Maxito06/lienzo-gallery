@@ -34,7 +34,17 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - Caché: Netlify no cachea las respuestas dinámicas de la API que no declaran Cache-Control, y respeta Cache-Control: no-store. La API debe declarar Cache-Control explícito en respuestas sensibles.
 - Cloudinary: la subida directa firmada funciona. La API solo firma (SHA-1 con crypto de Node, parámetros ordenados alfabéticamente); el API_SECRET nunca sale del servidor. El preset lienzo_artworks deja los archivos en lienzo/artworks. Se aceptó una imagen de 7,8 MB: reducir en el navegador antes de subir y verificar el límite de tamaño del plan gratuito.
 - Netlify: detener los builds (Build status → Stop builds) para no gastar los 15 créditos por despliegue; activarlos solo cuando se necesite desplegar.
-- Pendientes: eliminar la tabla SmokeTest y su migración (TEC-05) y limpiar subidas huérfanas de Cloudinary (Fase 3).
+- La tabla SmokeTest y su migración se eliminaron en TEC-05 (el esquema real la sustituyó). Pendiente: limpiar subidas huérfanas de Cloudinary (Fase 3).
+
+## Pruebas
+
+- Las pruebas e2e corren contra una rama aparte de Neon llamada "test", con conexión directa (sin pooler), definida en la variable TEST_DATABASE_URL de apps/api/.env. Nunca contra la base real, porque cada ejecución la borra y recrea.
+- Seguro contra accidentes: apps/api/test/test-db.ts compara el identificador del servidor (ep-...) de TEST_DATABASE_URL con el de DATABASE_URL y DIRECT_URL, sin importar el sufijo -pooler, y aborta si coinciden o si falta la variable. Se evalúa al cargar vitest.config.e2e.ts, antes de tocar nada.
+- Arranque global (apps/api/test/global-setup.ts): ejecuta `prisma migrate reset --force` con DIRECT_URL apuntando a la rama de pruebas, así el esquema se autorrepara en cada ejecución. prisma.config.ts no define semilla, por lo que la base de pruebas queda vacía.
+- Durante las pruebas e2e, DATABASE_URL se sustituye por TEST_DATABASE_URL (config `test.env`) y una prueba lo verifica.
+- Las pruebas e2e las ejecuta siempre una persona (`npm run test:e2e` desde apps/api); los agentes de código no deben ejecutarlas, solo `npm run test` y `npm run build`.
+- Regla permanente: todo endpoint nuevo se entrega con sus pruebas, incluida la comprobación de que los borradores nunca se exponen en rutas públicas.
+- Estado inicial: pruebas de GET /health y GET /health/db (3 pruebas pasando). `npm run test` (unitarias) usa passWithNoTests porque aún no hay pruebas unitarias. Se borraron las pruebas de plantilla de Nest.
 
 ## Pendiente de validar
 
@@ -43,4 +53,5 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - Reenvío de cuerpos POST en el proxy: afinarlo y probarlo cuando exista el login.
 - Límite de tamaño por imagen del plan gratuito de Cloudinary: verificarlo antes de la fase de subida de obras.
 - Limpieza de subidas huérfanas en Cloudinary: se define en la fase 3.
-- Eliminar la tabla SmokeTest y su migración de Neon (TEC-05).
+- Las cadenas de conexión usan sslmode=require; en la próxima versión mayor de pg (v9) cambiará su significado. Plan: cambiar a sslmode=verify-full en apps/api/.env y en las variables de entorno de Render antes de actualizar pg. Por ahora es solo un aviso inofensivo.
+- Las pruebas se ejecutan a mano; evaluar automatizarlas en GitHub Actions con su propia rama de Neon más adelante.
