@@ -14,70 +14,12 @@ import {
 } from '@nestjs/common';
 import { AdminGuard } from '../auth/admin.guard.js';
 import { slugify } from '../common/slugify.js';
-import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma.service.js';
+import { DETAIL_INCLUDE, LIST_INCLUDE, toDetailDto, toListDto } from './artwork-dto.js';
 import { type ArtworkInput, parseArtworkInput } from './artwork-input.js';
 import { isPrismaError, parseUuid } from './validation.js';
 
-const NAME_SELECT = { id: true, slug: true, nameEs: true, nameEn: true } as const;
-
-const LIST_INCLUDE = {
-  technique: { select: NAME_SELECT },
-  series: { select: NAME_SELECT },
-  images: { where: { isPrimary: true }, select: { cloudinaryPublicId: true }, take: 1 },
-  _count: { select: { images: true } },
-} satisfies Prisma.ArtworkInclude;
-
-const DETAIL_INCLUDE = {
-  technique: { select: NAME_SELECT },
-  series: { select: NAME_SELECT },
-  images: { orderBy: { position: 'asc' } },
-  _count: { select: { images: true } },
-} satisfies Prisma.ArtworkInclude;
-
-type ListRow = Prisma.ArtworkGetPayload<{ include: typeof LIST_INCLUDE }>;
-type DetailRow = Prisma.ArtworkGetPayload<{ include: typeof DETAIL_INCLUDE }>;
-
 const MAX_SLUG_ATTEMPTS = 5;
-
-function summary(row: ListRow | DetailRow) {
-  return {
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    status: row.status,
-    isPublished: row.publishedAt !== null,
-    publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
-    year: row.year,
-    widthCm: row.widthCm ? row.widthCm.toNumber() : null,
-    heightCm: row.heightCm ? row.heightCm.toNumber() : null,
-    referencePriceCop: row.referencePriceCop,
-    technique: row.technique,
-    series: row.series,
-    imageCount: row._count.images,
-  };
-}
-
-function toListDto(row: ListRow) {
-  return { ...summary(row), primaryImagePublicId: row.images[0]?.cloudinaryPublicId ?? null };
-}
-
-function toDetailDto(row: DetailRow) {
-  return {
-    ...summary(row),
-    primaryImagePublicId: row.images.find((image) => image.isPrimary)?.cloudinaryPublicId ?? null,
-    descriptionEs: row.descriptionEs,
-    descriptionEn: row.descriptionEn,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    images: row.images.map((image) => ({
-      id: image.id,
-      cloudinaryPublicId: image.cloudinaryPublicId,
-      position: image.position,
-      isPrimary: image.isPrimary,
-    })),
-  };
-}
 
 @Controller('admin/artworks')
 @UseGuards(AdminGuard)

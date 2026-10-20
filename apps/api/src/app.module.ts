@@ -2,12 +2,14 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ArtworksController } from './admin/artworks.controller.js';
+import { ArtworkImagesController } from './admin/artwork-images.controller.js';
 import { SeriesController } from './admin/series.controller.js';
 import { TechniquesController } from './admin/techniques.controller.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { HealthController } from './health.controller.js';
 import { AuthController } from './auth/auth.controller.js';
+import { CloudinaryService } from './cloudinary/cloudinary.service.js';
 import { CsrfGuard } from './auth/csrf.guard.js';
 import { LoginRateLimiter } from './auth/login-rate-limiter.js';
 import { SessionsService } from './auth/sessions.service.js';
@@ -24,6 +26,7 @@ import { PublicController } from './public/public.controller.js';
     TechniquesController,
     SeriesController,
     ArtworksController,
+    ArtworkImagesController,
     PublicController,
   ],
   providers: [
@@ -32,6 +35,7 @@ import { PublicController } from './public/public.controller.js';
     SessionsService,
     LoginRateLimiter,
     PublicCatalogService,
+    CloudinaryService,
     { provide: APP_GUARD, useClass: CsrfGuard },
   ],
 })
