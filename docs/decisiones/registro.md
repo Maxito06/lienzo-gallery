@@ -44,14 +44,28 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - Durante las pruebas e2e, DATABASE_URL se sustituye por TEST_DATABASE_URL (config `test.env`) y una prueba lo verifica.
 - Las pruebas e2e las ejecuta siempre una persona (`npm run test:e2e` desde apps/api); los agentes de código no deben ejecutarlas, solo `npm run test` y `npm run build`.
 - Regla permanente: todo endpoint nuevo se entrega con sus pruebas, incluida la comprobación de que los borradores nunca se exponen en rutas públicas.
-- Estado inicial: pruebas de GET /health y GET /health/db (3 pruebas pasando). `npm run test` (unitarias) usa passWithNoTests porque aún no hay pruebas unitarias. Se borraron las pruebas de plantilla de Nest.
+- Estado actual: pruebas e2e de GET /health, GET /health/db, sesiones, login/logout/me y protección (CSRF, límite de intentos y guard), y pruebas unitarias del limitador de intentos de login (apps/api/src/auth/login-rate-limiter.spec.ts), que se ejecutan con `npm run test` y no usan base de datos. Se borraron las pruebas de plantilla de Nest. `passWithNoTests` se conserva en la configuración unitaria por si en algún momento no hubiera ninguna.
+
+## Autenticación del administrador (HU-07)
+
+- Sesiones propias guardadas en la tabla admin_session. La cookie lleva `<id>.<secreto>`: el id es un UUID y el secreto son 32 bytes aleatorios. En la base solo se guarda el SHA-256 del secreto, así que ver la tabla no permite usar ninguna sesión. La comparación se hace en tiempo constante.
+- Expiración: 30 minutos de inactividad y 8 horas como máximo (expiresAt). lastSeenAt se renueva como máximo una vez por minuto para no escribir en cada petición. Una sesión vencida se borra al validarla.
+- Cookie `__Host-session`: HttpOnly, Secure, SameSite=Strict, Path=/ y sin Domain (lo exige el prefijo `__Host-`). Las respuestas de autenticación llevan Cache-Control: no-store.
+- Contraseñas con Argon2id. Correo inexistente y contraseña incorrecta devuelven el mismo 401 «Invalid credentials», y un hash falso calculado al arrancar la app iguala los tiempos de respuesta para no revelar qué correos existen. Las entradas están acotadas (correo hasta 254 caracteres, contraseña hasta 1024).
+- CSRF: además de SameSite=Strict, un guard global exige la cabecera `X-Requested-With: lienzo-web` en todo método que no sea GET, HEAD u OPTIONS. Un sitio ajeno no puede enviarla sin una consulta previa que la API no autoriza. El frontend Angular deberá enviarla en todas sus peticiones.
+- Protección de rutas: toda ruta de administración se declara con `@UseGuards(AdminGuard)`. Regla permanente: cada ruta de administración nueva lleva ese guard y una prueba que compruebe que sin sesión responde 401.
+- Límite de intentos: 5 fallos por correo (normalizado a minúsculas) en 15 minutos; después responde 429 con Retry-After. El intento se cuenta antes de verificar la contraseña para que las peticiones en paralelo no puedan saltarse el límite. No se usa la IP del visitante porque detrás del proxy de Netlify la API no puede conocerla de forma fiable.
+- Límites aceptados: el contador vive en memoria, así que se reinicia cuando Render reinicia la API (máximo 10 000 correos registrados a la vez). Además, quien conozca el correo del administrador puede bloquear su login durante 15 minutos; se acepta porque no da acceso a la cuenta y es preferible a permitir fuerza bruta.
+- Sin dependencias nuevas: la lectura de cookies y el limitador son código propio pequeño, con pruebas.
 
 ## Pendiente de validar
 
 - SSR dinámico en Netlify: hasta ahora solo se comprobó la ruta inicial prerenderizada. Verificar el renderizado en el servidor y la caché de las páginas SSR cuando exista una ruta no prerenderizada (por ejemplo, el detalle de una obra).
 - Límite de espera del proxy con un arranque en frío largo: por el proxy se midieron 24 s, pero Render llegó a 32,6 s en una medición directa. No se ha comprobado qué hace la Edge Function si la espera pasa de ahí. Mantener la llamada de "despertar" con mensaje de espera en el login.
-- Reenvío de cuerpos POST en el proxy: afinarlo y probarlo cuando exista el login.
+- Reenvío de cuerpos POST en el proxy: afinarlo y validarlo con el login real en producción: cuerpo POST, cabecera X-Requested-With, cookie `__Host-session` de ida y vuelta y arranque en frío de Render.
 - Límite de tamaño por imagen del plan gratuito de Cloudinary: verificarlo antes de la fase de subida de obras.
 - Limpieza de subidas huérfanas en Cloudinary: se define en la fase 3.
 - Las cadenas de conexión usan sslmode=require; en la próxima versión mayor de pg (v9) cambiará su significado. Plan: cambiar a sslmode=verify-full en apps/api/.env y en las variables de entorno de Render antes de actualizar pg. Por ahora es solo un aviso inofensivo.
 - Las pruebas se ejecutan a mano; evaluar automatizarlas en GitHub Actions con su propia rama de Neon más adelante.
+- Sesiones vencidas que nadie vuelve a usar: quedan en la tabla. SessionsService.deleteExpired existe pero aún no se ejecuta de forma periódica. Definir cuándo (por ejemplo, al iniciar sesión o con una tarea programada).
+- El contador de intentos de login es en memoria; evaluar guardarlo en la base de datos si se vuelve un problema.
