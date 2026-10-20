@@ -88,18 +88,42 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - En las pruebas, Cloudinary se reemplaza por un falso, y la configuración e2e deja vacías las variables de Cloudinary como red de seguridad: ninguna prueba puede llegar al Cloudinary real.
 - Cliente propio con fetch y la API de administración de Cloudinary, sin su SDK, para no sumar dependencias.
 
+## Panel de administración (frontend)
+
+- Base técnica: Angular con componentes standalone, signals y HttpClient con fetch. `strict` y `strictTemplates` están activados desde el principio. En desarrollo, un proxy (`apps/web/proxy.conf.json`) reenvía `/api` a la API local (puerto 3000) quitando el prefijo, igual que hace la Edge Function de Netlify en producción.
+- Interceptor CSRF: añade `X-Requested-With: lienzo-web` solo a las peticiones que no son GET, HEAD ni OPTIONS y cuya URL empieza por `/api/`; así la cabecera no se envía a Cloudinary ni a otros dominios.
+- Interceptor de sesión caducada: ante un 401 en una URL `/api/admin/` limpia el usuario y lleva al login; no toca `/api/auth/` para que el login vea su propio 401. Consecuencia aceptada: la sesión caducada se detecta al hacer una acción o al recargar, no antes.
+- Rutas: `admin/**` se renderiza solo en el navegador (`RenderMode.Client`), porque depende de la cookie y es privado. Un guard consulta `GET /auth/me`; si no hay sesión (o la consulta falla) lleva a `/admin/login`. El login lanza una llamada a `/api/health` para despertar Render y muestra un aviso si la API tarda más de 3 s en responder. El resto de rutas sigue prerenderizado.
+- Pantallas: login, técnicas, series, obras (lista, formulario, publicar y despublicar, eliminar con confirmación inline «¿Seguro? Sí / No», sin `window.confirm`) e imágenes de cada obra. La marca «Demo» sale de `isDemo`, campo que se añadió a las respuestas de administración de obras (lista, detalle, publicar y retirar). Los textos visibles están en español y cada botón lleva su equivalente en inglés en un comentario del template, para traducirlos después. El diseño es mínimo; el definitivo se hace más adelante.
+- Al crear una obra se navega a su pantalla de edición para poder subir las imágenes enseguida; al editar se vuelve al listado.
+- Las pruebas del frontend usan Vitest, `HttpTestingController` y servicios falsos: ninguna llega a la red ni a Cloudinary.
+
+## Imágenes: carpetas dinámicas de Cloudinary
+
+- Problema: la cuenta de Cloudinary usa carpetas dinámicas. Al subir con el upload preset, Cloudinary devolvía un `public_id` sin prefijo (por ejemplo `wew11cr2p9bqna6s1mj0`) y la carpeta quedaba aparte, en `asset_folder`. La API exige `^lienzo/artworks/[A-Za-z0-9_-]{1,100}$` y respondía 400 al registrar la foto. Las pruebas no lo detectaron porque usan un Cloudinary falso; se vio al probar con la nube real. Esto corrige el supuesto de la prueba de humo de que el preset deja los archivos en `lienzo/artworks`.
+- Solución: la API genera el `public_id` completo (`lienzo/artworks/` más 16 bytes aleatorios en base64url) al firmar y lo incluye en la firma junto con `timestamp` y `upload_preset` (SHA-1 con los parámetros en orden alfabético y el secreto al final). La respuesta de `sign` lleva también `publicId` y el navegador lo envía como `public_id` en la subida. Así no depende del modo de carpetas de la cuenta y el cliente no elige nombres. El registro sigue verificando el archivo contra Cloudinary.
+- Flujo de subida: el navegador sube directo a Cloudinary (firma, subida, registro). Se procesan los archivos de uno en uno y un fallo no cancela los siguientes. Las fotos de más de 10 MB o de más de 25 MP se reducen en el navegador con canvas a JPEG: fondo blanco, calidad 0.9 bajando a 0.6, después se reduce el tamaño un 15 %, con un máximo de 8 iteraciones y un objetivo de 9 MiB; si no lo consigue, avisa. Las demás se suben sin tocar. Los límites del frontend repiten los de la API y los del plan gratuito.
+- Miniaturas: una sola transformación por tamaño (`f_auto,q_auto` y un ancho fijo; 80 px en la lista y 240 px en la pantalla de imágenes) para cuidar los créditos. El nombre de la nube es una constante pública del frontend (`core/cloudinary.config.ts`); no es un secreto. Si se vaciara, las miniaturas dejarían de mostrarse.
+
 ## Pendiente de validar
 
 - SSR dinámico en Netlify: hasta ahora solo se comprobó la ruta inicial prerenderizada. Verificar el renderizado en el servidor y la caché de las páginas SSR cuando exista una ruta no prerenderizada (por ejemplo, el detalle de una obra).
 - Límite de espera del proxy con un arranque en frío largo: por el proxy se midieron 24 s, pero Render llegó a 32,6 s en una medición directa. No se ha comprobado qué hace la Edge Function si la espera pasa de ahí. Mantener la llamada de "despertar" con mensaje de espera en el login.
 - Reenvío de cuerpos POST en el proxy: afinarlo y validarlo con el login real en producción: cuerpo POST, cabecera X-Requested-With, cookie `__Host-session` de ida y vuelta y arranque en frío de Render.
-- Cloudinary plan gratuito: 10 MB y 25 MP por imagen (verificado), 25 créditos al mes y sin pago por excedente; si se superan las cuotas de forma continuada, la cuenta se desactiva por partes. El frontend debe reducir en el navegador las fotos que superen 10 MB o 25 MP antes de subirlas. Revisar el consumo de créditos de vez en cuando.
+- Cloudinary plan gratuito: 10 MB y 25 MP por imagen (verificado), 25 créditos al mes y sin pago por excedente; si se superan las cuotas de forma continuada, la cuenta se desactiva por partes. El panel ya reduce en el navegador las fotos que superan 10 MB o 25 MP (ver «Imágenes: carpetas dinámicas de Cloudinary»); falta probarlo a mano. Revisar el consumo de créditos de vez en cuando.
 - Archivos huérfanos en Cloudinary: quedan cuando un navegador sube una foto firmada y no la registra, y cuando falla el borrado de un archivo ya eliminado de la base de datos. Definir una limpieza periódica (comparar los archivos de la carpeta lienzo/artworks con los registrados).
 - Las cadenas de conexión usan sslmode=require; en la próxima versión mayor de pg (v9) cambiará su significado. Plan: cambiar a sslmode=verify-full en apps/api/.env y en las variables de entorno de Render antes de actualizar pg. Por ahora es solo un aviso inofensivo.
 - Las pruebas se ejecutan a mano; evaluar automatizarlas en GitHub Actions con su propia rama de Neon más adelante.
 - Sesiones vencidas que nadie vuelve a usar: quedan en la tabla. SessionsService.deleteExpired existe pero aún no se ejecuta de forma periódica. Definir cuándo (por ejemplo, al iniciar sesión o con una tarea programada).
 - El contador de intentos de login es en memoria; evaluar guardarlo en la base de datos si se vuelve un problema.
-- Render necesita las variables CLOUDINARY_* para que la firma y el registro de fotos funcionen en producción; sin ellas responden 503.
+- Subida real en producción: Render necesita las variables CLOUDINARY_* (incluido el upload preset firmado) para que la firma y el registro de fotos funcionen; sin ellas responden 503. Falta comprobar también el CORS de la subida directa desde el dominio de Netlify.
+- Archivos huérfanos de pruebas: quedaron subidos en Cloudinary los de las subidas fallidas anteriores a la corrección (por ejemplo, `wew11cr2p9bqna6s1mj0`). Borrarlos a mano en la Media Library, sin tocar las imágenes de las 12 obras de demostración. Además de la limpieza periódica general de arriba.
+- El script de seed firma sus subidas con su propia fórmula, sin `public_id`; revisarlo si se vuelve a ejecutar con carpetas dinámicas.
+- La reducción de imágenes con canvas no tiene prueba automática: probar a mano con una foto de más de 10 MB y con un PNG con transparencia.
+- `angular.json` tiene `security.allowedHosts` vacío; revisarlo antes de desplegar en Netlify.
+- Las peticiones de la web hechas en el servidor (SSR) necesitan un origen absoluto de la API; decisión pendiente para la galería pública.
+- `app.routes.ts` tiene una redirección temporal de la raíz a `admin`; se reemplaza por la galería pública.
+- Estado de las pruebas (2026-10-20): frontend 64 (Vitest), API 34 unitarias y 114 e2e. Los e2e se cuentan por los `it(` de `apps/api/test`; los ejecuta Max.
 - RF-19: al publicar, retirar o editar una obra, la API debe purgar la caché de Netlify. Aún no está implementado.
 - Mapa del sitio: debe construirse con PublicCatalogService.listPublishedSlugs (ya existe y está probado), nunca con una consulta propia.
 - Concurrencia: con un solo administrador se aceptan carreras raras (por ejemplo, quitar la foto principal justo mientras otra petición publica la obra). Reevaluar si hubiera más de un administrador.
