@@ -1,0 +1,78 @@
+<section>
+  <h2>Imágenes</h2>
+
+  @if (errorMessage(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  @if (published() && images().length === 1) {
+    <p>La obra está publicada: no puedes eliminar su única imagen.</p>
+  }
+
+  @if (sortedImages().length === 0) {
+    <p>Todavía no hay imágenes.</p>
+  } @else {
+    <ul class="images">
+      @for (image of sortedImages(); track image.id; let i = $index; let last = $last) {
+        <li>
+          @if (thumbnail(image.cloudinaryPublicId); as url) {
+            <img [src]="url" alt="" width="120" />
+          } @else {
+            <span>Miniatura no disponible (falta configurar el nombre de la nube)</span>
+          }
+
+          @if (image.isPrimary) {
+            <strong>Principal</strong>
+          } @else {
+            <!-- Make primary -->
+            <button type="button" [disabled]="busy() || uploading()" (click)="makePrimary(image.id)">
+              Hacer principal
+            </button>
+          }
+
+          <!-- Move up -->
+          <button type="button" [disabled]="busy() || uploading() || i === 0" (click)="move(i, -1)">Subir</button>
+          <!-- Move down -->
+          <button type="button" [disabled]="busy() || uploading() || last" (click)="move(i, 1)">Bajar</button>
+
+          @if (confirmingId() === image.id) {
+            <!-- Sure? Yes / No -->
+            <span>¿Seguro?</span>
+            <button type="button" [disabled]="busy()" (click)="confirmDelete(image.id)">Sí</button>
+            <button type="button" (click)="cancelDelete()">No</button>
+          } @else {
+            <!-- Delete -->
+            <button type="button" [disabled]="busy() || uploading()" (click)="askDelete(image.id)">Eliminar</button>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="upload">
+    <!-- Add images -->
+    <label for="imageFiles">Añadir imágenes</label>
+    <input
+      id="imageFiles"
+      type="file"
+      multiple
+      accept="image/jpeg,image/png,image/webp"
+      [disabled]="atLimit() || uploading()"
+      (change)="onFilesSelected($event)"
+    />
+    @if (atLimit()) {
+      <p>Máximo {{ maxImages }} imágenes por obra.</p>
+    }
+    @if (notice(); as text) {
+      <p>{{ text }}</p>
+    }
+  </div>
+
+  @if (uploads().length > 0) {
+    <ul role="status">
+      @for (upload of uploads(); track $index) {
+        <li [class.error]="upload.failed">{{ upload.name }}: {{ upload.phase }}</li>
+      }
+    </ul>
+  }
+</section>

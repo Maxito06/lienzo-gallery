@@ -18,6 +18,7 @@ import {
 } from '../../../core/artworks.service';
 import { Series, SeriesService } from '../../../core/series.service';
 import { Technique, TechniquesService } from '../../../core/techniques.service';
+import { ArtworkImages } from './artwork-images';
 
 // Mismos límites que la API (artwork-input.ts)
 const MAX_TITLE_LENGTH = 120;
@@ -45,7 +46,7 @@ function numberOrNull(value: unknown): number | null {
 
 @Component({
   selector: 'app-artwork-form-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, ArtworkImages],
   templateUrl: './artwork-form-page.html',
   styleUrl: './artwork-form-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -157,14 +158,28 @@ export class ArtworkFormPage implements OnInit {
       ? this.artworks.update(this.artworkId, input)
       : this.artworks.create(input);
     request.subscribe({
-      next: () => {
+      next: (saved) => {
         this.saving.set(false);
-        void this.router.navigate(['/admin/artworks']);
+        // Al crear se abre la edición para poder añadir imágenes enseguida
+        void this.router.navigate(
+          this.isEdit ? ['/admin/artworks'] : ['/admin/artworks', saved.id, 'edit'],
+        );
       },
       error: (error: unknown) => {
         this.saving.set(false);
         this.errorMessage.set(this.messageFor(error));
       },
+    });
+  }
+
+  // Recarga solo la obra (imágenes y estado de publicación) sin pisar lo que se escribe en el formulario
+  protected reloadArtwork(): void {
+    if (!this.artworkId) {
+      return;
+    }
+    this.artworks.get(this.artworkId).subscribe({
+      next: (artwork) => this.artwork.set(artwork),
+      error: (error: unknown) => this.errorMessage.set(this.messageFor(error)),
     });
   }
 

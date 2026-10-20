@@ -118,5 +118,16 @@
       <!-- Cancel -->
       <button type="button" (click)="cancel()">Cancelar</button>
     </form>
+
+    @if (artwork(); as current) {
+      <app-artwork-images
+        [artworkId]="current.id"
+        [images]="current.images"
+        [published]="current.isPublished"
+        (changed)="reloadArtwork()"
+      />
+    } @else if (!isEdit) {
+      <p>Guarda la obra para poder añadir imágenes.</p>
+    }
   }
 </section>

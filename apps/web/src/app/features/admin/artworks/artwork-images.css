@@ -1,0 +1,24 @@
+.images {
+  list-style: none;
+  padding: 0;
+}
+
+.images li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 1rem 0;
+}
+
+.error {
+  color: #b00020;
+}

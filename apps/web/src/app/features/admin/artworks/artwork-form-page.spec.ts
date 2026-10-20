@@ -14,6 +14,7 @@ const DETAIL = {
   status: 'RESERVED',
   isPublished: true,
   publishedAt: '2026-01-02T00:00:00.000Z',
+  isDemo: false,
   year: 2020,
   widthCm: 50,
   heightCm: 40.5,
@@ -84,7 +85,7 @@ describe('ArtworkFormPage', () => {
     httpTesting.expectNone('/api/admin/artworks');
   });
 
-  it('creates an artwork and navigates to the list', () => {
+  it('creates an artwork and navigates to its edit page', () => {
     setup(null);
     flushLookups();
     fixture.detectChanges();
@@ -111,6 +112,28 @@ describe('ArtworkFormPage', () => {
       descriptionEn: null,
     });
     req.flush(DETAIL);
+
+    expect(navigate).toHaveBeenCalledWith(['/admin/artworks', 'a1', 'edit']);
+  });
+
+  it('shows the images section only after the artwork exists', () => {
+    setup(null);
+    flushLookups();
+    fixture.detectChanges();
+    expect(root.textContent).toContain('Guarda la obra para poder añadir imágenes.');
+    expect(root.querySelector('app-artwork-images')).toBeNull();
+  });
+
+  it('goes back to the list after updating', () => {
+    setup('a1');
+    flushLookups();
+    httpTesting.expectOne('/api/admin/artworks/a1').flush(DETAIL);
+    fixture.detectChanges();
+    expect(root.querySelector('app-artwork-images')).not.toBeNull();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    submit();
+    httpTesting.expectOne('/api/admin/artworks/a1').flush(DETAIL);
 
     expect(navigate).toHaveBeenCalledWith(['/admin/artworks']);
   });

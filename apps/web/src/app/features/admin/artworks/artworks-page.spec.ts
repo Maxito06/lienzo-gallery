@@ -14,6 +14,7 @@ function artwork(overrides: object = {}) {
     status: 'AVAILABLE',
     isPublished: false,
     publishedAt: null,
+    isDemo: false,
     year: 2020,
     widthCm: 50,
     heightCm: 40.5,
@@ -61,11 +62,18 @@ describe('ArtworksPage', () => {
     fixture.detectChanges();
 
     const cells = Array.from(root.querySelectorAll('tbody td')).map((td) => td.textContent?.trim());
-    expect(cells[0]).toBe('Sunset');
-    expect(cells[1]).toBe('Óleo');
-    expect(cells[2]).toBe('Paisajes');
-    expect(cells[3]).toBe('Disponible');
-    expect(cells[4]).toBe('Borrador');
+    // La primera columna es la miniatura (vacía mientras no se configure la nube)
+    expect(cells[1]).toBe('Sunset');
+    expect(cells[2]).toBe('Óleo');
+    expect(cells[3]).toBe('Paisajes');
+    expect(cells[4]).toBe('Disponible');
+    expect(cells[5]).toBe('Borrador');
+    expect(root.textContent).not.toContain('Demo');
+  });
+
+  it('shows the demo label for demo artworks', () => {
+    loadWith([artwork({ isDemo: true })]);
+    expect(root.querySelector('tbody td:nth-child(2) strong')?.textContent).toBe('Demo');
   });
 
   it('shows the empty message when there are no artworks', () => {

@@ -16,6 +16,7 @@
     <table>
       <thead>
         <tr>
+          <th scope="col">Imagen</th>
           <th scope="col">Título</th>
           <th scope="col">Técnica</th>
           <th scope="col">Serie</th>
@@ -27,7 +28,17 @@
       <tbody>
         @for (item of items(); track item.id) {
           <tr>
-            <td>{{ item.title }}</td>
+            <td>
+              @if (thumbnail(item.primaryImagePublicId); as url) {
+                <img [src]="url" alt="" width="80" />
+              }
+            </td>
+            <td>
+              {{ item.title }}
+              @if (item.isDemo) {
+                <strong>Demo</strong>
+              }
+            </td>
             <td>{{ item.technique.nameEs }}</td>
             <td>{{ item.series?.nameEs ?? '—' }}</td>
             <td>{{ statusLabels[item.status] }}</td>

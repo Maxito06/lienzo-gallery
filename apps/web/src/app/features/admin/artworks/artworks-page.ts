@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ARTWORK_STATUS_LABELS, ArtworkSummary, ArtworksService } from '../../../core/artworks.service';
+import { cloudinaryImageUrl } from '../../../core/cloudinary.config';
 
 type FailedAction = 'load' | 'publish' | 'unpublish' | 'delete';
 
@@ -18,6 +19,10 @@ export class ArtworksPage implements OnInit {
   private readonly artworks = inject(ArtworksService);
 
   protected readonly statusLabels = ARTWORK_STATUS_LABELS;
+
+  protected thumbnail(publicId: string | null): string | null {
+    return publicId ? cloudinaryImageUrl(publicId, 80) : null;
+  }
   protected readonly items = signal<ArtworkSummary[]>([]);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);

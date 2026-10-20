@@ -25,6 +25,7 @@ export interface ArtworkSummary {
   status: ArtworkStatus;
   isPublished: boolean;
   publishedAt: string | null;
+  isDemo: boolean;
   year: number | null;
   widthCm: number | null;
   heightCm: number | null;
