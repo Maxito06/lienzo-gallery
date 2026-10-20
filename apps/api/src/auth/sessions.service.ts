@@ -72,7 +72,7 @@ export class SessionsService {
     }
 
     if (idleMs > LAST_SEEN_UPDATE_MS) {
-      await this.prisma.adminSession.update({
+      await this.prisma.adminSession.updateMany({
         where: { id: session.id },
         data: { lastSeenAt: now },
       });
