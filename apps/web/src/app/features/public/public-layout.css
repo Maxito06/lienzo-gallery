@@ -1,0 +1,30 @@
+/* Fuera de pantalla hasta recibir el foco */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.skip-link:focus {
+  left: 0;
+  z-index: 10;
+  padding: 0.5rem 1rem;
+  background: #fff;
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+}
+
+main:focus {
+  outline: none;
+}

@@ -4,7 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
-import { ArtworkDetailPage, truncateDescription } from './artwork-detail-page';
+import { ArtworkDetailPage } from './artwork-detail-page';
 
 const technique = { slug: 'oleo', nameEs: 'Óleo', nameEn: 'Oil' };
 
@@ -170,15 +170,5 @@ describe('ArtworkDetailPage', () => {
     expect(meta.getTag("property='og:image'")?.content).toContain('img-b');
     expect(meta.getTag("name='twitter:card'")?.content).toBe('summary_large_image');
     expect(meta.getTag("name='robots'")).toBeNull();
-  });
-});
-
-describe('truncateDescription', () => {
-  it('truncateDescription cuts at a word boundary and keeps short text intact', () => {
-    expect(truncateDescription('Texto corto.')).toBe('Texto corto.');
-    const result = truncateDescription('palabra '.repeat(40));
-    expect(result.length).toBeLessThanOrEqual(155);
-    expect(result.endsWith('…')).toBe(true);
-    expect(result.slice(0, -1).split(' ').every((w) => w === 'palabra')).toBe(true);
   });
 });

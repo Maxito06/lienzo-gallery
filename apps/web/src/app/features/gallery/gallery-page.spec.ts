@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
+import { WHATSAPP_NUMBER } from '../../core/contact.config';
 import { GalleryPage } from './gallery-page';
 
 const technique = { slug: 'oleo', nameEs: 'Óleo', nameEn: 'Oil' };
@@ -155,5 +156,36 @@ describe('GalleryPage', () => {
     respond(pageOf([artwork()], 2, 2));
     expect(button('Anterior').disabled).toBe(false);
     expect(button('Siguiente').disabled).toBe(true);
+  });
+
+  it('shows the commission call to action only when there is a WhatsApp number', () => {
+    start();
+    respond(pageOf([artwork()]));
+    const link = root.querySelector('aside a');
+    if (WHATSAPP_NUMBER) {
+      expect(root.querySelector('aside h2')?.textContent).toContain('¿Quieres encargar una obra?');
+      expect(link?.getAttribute('href')?.startsWith('https://wa.me/')).toBe(true);
+      expect(link?.getAttribute('target')).toBe('_blank');
+      expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+    } else {
+      expect(link).toBeNull();
+    }
+  });
+
+  it('loads the first images eagerly and the rest lazily', () => {
+    start();
+    const items = Array.from({ length: 6 }, (_, i) => artwork({ slug: `a${i}`, title: `A${i}` }));
+    respond(pageOf(items));
+    const images = Array.from(root.querySelectorAll('ul.grid img'));
+    expect(images.map((img) => img.getAttribute('loading'))).toEqual([
+      'eager',
+      'eager',
+      'eager',
+      'eager',
+      'lazy',
+      'lazy',
+    ]);
+    expect(images[0].getAttribute('fetchpriority')).toBe('high');
+    expect(images[1].hasAttribute('fetchpriority')).toBe(false);
   });
 });

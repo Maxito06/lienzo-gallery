@@ -9,17 +9,16 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, catchError, map, merge, of, switchMap, tap } from 'rxjs';
 import { ARTWORK_STATUS_LABELS } from '../../core/artworks.service';
 import { cloudinaryImageUrl } from '../../core/cloudinary.config';
 import { whatsappLink } from '../../core/contact.config';
 import { PublicArtworkDetail, PublicCatalogService } from '../../core/public-catalog.service';
+import { SeoService, truncateDescription } from '../../core/seo.service';
 
 const MAIN_IMAGE_WIDTH = 1200;
 const THUMB_IMAGE_WIDTH = 120;
-const DESCRIPTION_MAX_LENGTH = 155;
 const FALLBACK_DESCRIPTION = 'Obra de la galería Lienzo.';
 
 type DetailState =
@@ -27,19 +26,6 @@ type DetailState =
   | { kind: 'notFound' }
   | { kind: 'error' }
   | { kind: 'ready'; artwork: PublicArtworkDetail };
-
-// Recorta sin cortar palabras; el resultado, con la elipsis, no pasa de maxLength
-export function truncateDescription(text: string, maxLength = DESCRIPTION_MAX_LENGTH): string {
-  const clean = text.replace(/\s+/g, ' ').trim();
-  if (clean.length <= maxLength) {
-    return clean;
-  }
-  const head = clean.slice(0, maxLength - 1);
-  const cutsWord = clean[maxLength - 1] !== ' ';
-  const lastSpace = head.lastIndexOf(' ');
-  const cut = cutsWord && lastSpace > 0 ? head.slice(0, lastSpace) : head;
-  return `${cut.trimEnd()}…`;
-}
 
 const numberFormat = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 2 });
 const priceFormat = new Intl.NumberFormat('es-CO', {
@@ -58,8 +44,7 @@ const priceFormat = new Intl.NumberFormat('es-CO', {
 export class ArtworkDetailPage {
   private readonly catalog = inject(PublicCatalogService);
   private readonly route = inject(ActivatedRoute);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
+  private readonly seo = inject(SeoService);
   // Solo existe en el servidor; en el navegador es null
   private readonly responseInit = inject(RESPONSE_INIT, { optional: true });
   private readonly retry$ = new Subject<void>();
@@ -170,8 +155,7 @@ export class ArtworkDetailPage {
       if (this.responseInit) {
         this.responseInit.status = 404;
       }
-      this.title.setTitle('Obra no encontrada · Lienzo');
-      this.meta.updateTag({ name: 'robots', content: 'noindex' });
+      this.seo.setPage({ title: 'Obra no encontrada · Lienzo', noindex: true });
     }
   }
 
@@ -179,19 +163,12 @@ export class ArtworkDetailPage {
     const description = artwork.descriptionEs
       ? truncateDescription(artwork.descriptionEs) || FALLBACK_DESCRIPTION
       : FALLBACK_DESCRIPTION;
-    const pageTitle = `${artwork.title} · Lienzo`;
-    this.title.setTitle(pageTitle);
-    this.meta.removeTag("name='robots'");
-    this.meta.updateTag({ name: 'description', content: description });
-    this.meta.updateTag({ property: 'og:title', content: pageTitle });
-    this.meta.updateTag({ property: 'og:description', content: description });
-    this.meta.updateTag({ property: 'og:type', content: 'article' });
-    this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
     const image = primaryPublicId ? cloudinaryImageUrl(primaryPublicId, MAIN_IMAGE_WIDTH) : null;
-    if (image) {
-      this.meta.updateTag({ property: 'og:image', content: image });
-    } else {
-      this.meta.removeTag("property='og:image'");
-    }
+    this.seo.setPage({
+      title: `${artwork.title} · Lienzo`,
+      description,
+      image: image ?? undefined,
+      type: 'article',
+    });
   }
 }

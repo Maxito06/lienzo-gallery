@@ -1,9 +1,18 @@
 <header>
-  <h1>Lienzo</h1>
+  <h1>Galería</h1>
   <p>Galería de arte (obras de dominio público)</p>
 </header>
 
-<main>
+@if (commissionLink; as link) {
+  <aside>
+    <h2>¿Quieres encargar una obra?</h2>
+    <p>Cuéntanos tu idea y lo conversamos por WhatsApp.</p>
+    <!-- Write on WhatsApp -->
+    <a [href]="link" target="_blank" rel="noopener noreferrer">Escribir por WhatsApp</a>
+  </aside>
+}
+
+<section>
   <form class="filters" aria-label="Filtros de la galería" (submit)="$event.preventDefault()">
     <label>
       Técnica
@@ -71,13 +80,19 @@
             }
           } @else {
             <ul class="grid">
-              @for (item of current.data.items; track item.slug) {
+              @for (item of current.data.items; track item.slug; let i = $index) {
                 <li>
                   <!-- Artwork detail (view artwork) -->
                   <a [routerLink]="['/obras', item.slug]">
                     <article>
                       @if (imageUrl(item); as url) {
-                        <img [src]="url" [alt]="item.title || 'Obra sin título'" loading="lazy" />
+                        <!-- Las 4 primeras se cargan de inmediato; la primera con prioridad alta -->
+                        <img
+                          [src]="url"
+                          [alt]="item.title || 'Obra sin título'"
+                          [attr.loading]="i < 4 ? 'eager' : 'lazy'"
+                          [attr.fetchpriority]="i === 0 ? 'high' : null"
+                        />
                       } @else {
                         <div class="no-image">Sin imagen</div>
                       }
@@ -118,4 +133,4 @@
       }
     }
   }
-</main>
+</section>

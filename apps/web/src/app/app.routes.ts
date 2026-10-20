@@ -41,13 +41,23 @@ export const routes: Routes = [
   },
   {
     path: '',
-    pathMatch: 'full',
-    loadComponent: () => import('./features/gallery/gallery-page').then((m) => m.GalleryPage),
+    loadComponent: () => import('./features/public/public-layout').then((m) => m.PublicLayout),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () => import('./features/gallery/gallery-page').then((m) => m.GalleryPage),
+      },
+      {
+        path: 'obras/:slug',
+        loadComponent: () =>
+          import('./features/artwork-detail/artwork-detail-page').then((m) => m.ArtworkDetailPage),
+      },
+      {
+        path: '**',
+        loadComponent: () =>
+          import('./features/not-found/not-found-page').then((m) => m.NotFoundPage),
+      },
+    ],
   },
-  {
-    path: 'obras/:slug',
-    loadComponent: () =>
-      import('./features/artwork-detail/artwork-detail-page').then((m) => m.ArtworkDetailPage),
-  },
-  { path: '**', redirectTo: '' },
 ];

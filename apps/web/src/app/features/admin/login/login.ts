@@ -5,6 +5,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { finalize, timer } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
+import { SeoService } from '../../../core/seo.service';
 
 const WAKING_NOTICE_DELAY_MS = 3000;
 
@@ -30,6 +31,8 @@ export class Login {
   protected readonly errorMessage = signal<string | null>(null);
 
   constructor() {
+    inject(SeoService).setPage({ title: 'Administración · Lienzo', noindex: true });
+
     // Despierta la API sin esperar; si tarda, avisa al usuario
     const noticeTimer = timer(WAKING_NOTICE_DELAY_MS).subscribe(() => this.waking.set(true));
     this.auth

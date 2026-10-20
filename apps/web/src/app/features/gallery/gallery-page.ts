@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, afterNextRender, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { Subject, catchError, map, merge, of, switchMap, tap } from 'rxjs';
 import { ARTWORK_STATUS_LABELS, ArtworkStatus } from '../../core/artworks.service';
 import { cloudinaryImageUrl } from '../../core/cloudinary.config';
+import { whatsappCommissionLink } from '../../core/contact.config';
+import { SeoService } from '../../core/seo.service';
 import {
   PublicArtworkPage,
   PublicArtworkSummary,
@@ -56,6 +57,7 @@ export class GalleryPage {
   private readonly retry$ = new Subject<void>();
   private autoRetried = false;
 
+  protected readonly commissionLink = whatsappCommissionLink();
   protected readonly statusLabels = ARTWORK_STATUS_LABELS;
   protected readonly statuses = VALID_STATUSES;
   protected readonly filters = signal<GalleryFilters>({
@@ -77,10 +79,9 @@ export class GalleryPage {
   );
 
   constructor() {
-    inject(Title).setTitle('Galería · Lienzo');
-    inject(Meta).updateTag({
-      name: 'description',
-      content: 'Galería de arte con obras de dominio público: pinturas, técnicas y series.',
+    inject(SeoService).setPage({
+      title: 'Galería · Lienzo',
+      description: 'Galería de arte con obras de dominio público: pinturas, técnicas y series.',
     });
 
     // switchMap cancela la petición anterior cuando cambia la URL

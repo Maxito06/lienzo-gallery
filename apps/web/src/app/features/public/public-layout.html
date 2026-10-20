@@ -1,0 +1,29 @@
+<!-- Skip to content -->
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+<header>
+  <a class="brand" routerLink="/">Lienzo</a>
+  <nav aria-label="Principal">
+    <!-- Gallery -->
+    <a routerLink="/">Galería</a>
+    @if (contactLink; as link) {
+      <!-- Contact -->
+      <a [href]="link" target="_blank" rel="noopener noreferrer">Contacto</a>
+    }
+  </nav>
+</header>
+
+<main id="contenido" tabindex="-1">
+  <router-outlet />
+</main>
+
+<footer>
+  <p>
+    Lienzo · Proyecto de portafolio de Maximiliano Correa Pico. Las obras mostradas son de dominio
+    público.
+  </p>
+  <!-- Source code on GitHub -->
+  <a href="https://github.com/Maxito06/lienzo-gallery" target="_blank" rel="noopener noreferrer"
+    >Código en GitHub</a
+  >
+</footer>
