@@ -58,14 +58,48 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - Límites aceptados: el contador vive en memoria, así que se reinicia cuando Render reinicia la API (máximo 10 000 correos registrados a la vez). Además, quien conozca el correo del administrador puede bloquear su login durante 15 minutos; se acepta porque no da acceso a la cuenta y es preferible a permitir fuerza bruta.
 - Sin dependencias nuevas: la lectura de cookies y el limitador son código propio pequeño, con pruebas.
 
+## Administración de obras, técnicas y series (HU-08, HU-10, HU-11, HU-13, HU-14)
+
+- Todas las rutas viven bajo /admin/ y llevan @UseGuards(AdminGuard); sin sesión responden 401 y, sin la cabecera CSRF en métodos que cambian estado, 403. Cada ruta se prueba con ambas comprobaciones.
+- Técnicas y series: nombre en español obligatorio y en inglés opcional (vacío o null lo borra), máximo 80 caracteres. El slug se genera del nombre en español (sin tildes, con guiones) y nunca cambia al editar, para no romper URLs de filtros futuras. Dos nombres que dan el mismo slug responden 409. La lista devuelve artworkCount.
+- Borrado: una técnica con obras no se puede borrar (409), porque la técnica es obligatoria en cada obra. Una serie con obras sí se borra y sus obras quedan sin serie (el esquema usa SetNull).
+- Obras: toda obra nace como borrador; crear y editar ignoran publishedAt e isDemo aunque el cliente los envíe. El slug se genera del título y, si ya existe, recibe sufijo (-2, -3...); tampoco cambia al editar. Una técnica o serie inexistente en el cuerpo responde 400. La validación vive en un archivo propio con pruebas unitarias (título hasta 120 caracteres, año 1000-2100, medidas con un decimal y hasta 9999.9, precio de referencia entero en pesos, descripciones hasta 2000 caracteres).
+- Publicar y retirar son endpoints propios (POST /admin/artworks/:id/publish y /unpublish), idempotentes. No se puede publicar una obra sin foto principal (409), para que la galería nunca muestre una tarjeta vacía. Al retirar y volver a publicar, la fecha de publicación se renueva.
+- Las listas de administración no están paginadas por ahora (volumen esperado pequeño).
+
+## Lectura pública del catálogo (HU-14)
+
+- Toda lectura pública de obras, técnicas y series pasa por PublicCatalogService, y toda consulta de obras usa una única función publishedWhere que añade el filtro de publicadas. Una prueba unitaria de arquitectura falla si cualquier archivo fuera de admin/, public/ y seed/ accede a obras, imágenes, técnicas o series con Prisma, y otra comprueba que cada consulta del servicio use publishedWhere.
+- No se filtra la existencia de borradores: un borrador y un slug inexistente responden el mismo 404; los conteos de técnicas y series cuentan solo obras publicadas; las técnicas y series sin ninguna obra publicada no aparecen en los listados de filtros.
+- Las respuestas públicas usan campos explícitos (sin id ni fechas internas; solo el listado de slugs para el mapa del sitio incluye updatedAt) y las pruebas comprueban las claves exactas. Incluyen isDemo para poder indicar al visitante que los datos de demostración son ficticios.
+- Rutas: GET /public/artworks (page desde 1, pageSize por defecto 12 y máximo 48, filtros series, technique y status, orden por fecha de publicación descendente), GET /public/artworks/:slug, GET /public/techniques y GET /public/series. Los parámetros inválidos o repetidos responden 400; page tiene un tope de 100000.
+- Todavía no se envían cabeceras de caché en estas rutas; se decide al conectar el frontend, junto con la purga de caché de Netlify (RF-19).
+
+## Imágenes de obras (HU-09)
+
+- Subida directa del navegador a Cloudinary con una firma corta emitida por la API (POST /admin/artworks/:id/images/sign); después el navegador avisa a la API (POST /admin/artworks/:id/images) y la API consulta a Cloudinary por la foto real antes de registrarla. La API no confía en lo que diga el navegador.
+- Verificación en el servidor: formato jpg, png o webp, máximo 10 MB y 25 megapíxeles. Son los límites del plan gratuito de Cloudinary (10 MB y 25 MP por imagen, según su documentación oficial consultada el 2026-10-20). Una foto rechazada se borra de Cloudinary (en mejor esfuerzo) y la API responde 422.
+- Solo se aceptan identificadores dentro de la carpeta lienzo/artworks/, para que nadie registre en una obra un archivo cualquiera de la cuenta. Máximo 8 fotos por obra (409 a la novena). La primera foto de una obra queda como principal.
+- Restricciones únicas en la base de datos (migración image_unique_constraints): cloudinary_public_id único, para que borrar una foto nunca borre un archivo que otra sigue usando, y (artwork_id, position) único. Un registro simultáneo de la misma foto da un 201 y un 409. Se eliminó el índice simple sobre artwork_id porque la restricción compuesta lo cubre.
+- Elegir principal: en una transacción se quita la marca a la anterior y se pone a la nueva (respeta el índice parcial de una principal por obra).
+- Reordenar: PUT /admin/artworks/:id/images/order con la lista completa de ids; debe coincidir exactamente con las fotos de la obra. En una transacción se desplazan las posiciones +1000 y luego se asignan 1..n, para no chocar con la restricción única.
+- Eliminar una foto: si era la principal y quedan otras, la de menor posición pasa a ser la principal; las posiciones se compactan. No se puede eliminar la última foto de una obra publicada (409; hay que retirarla antes). Borrar una obra también borra sus archivos. El archivo de Cloudinary se borra después de confirmar la base de datos y, si Cloudinary falla, la petición no falla: queda un aviso en el log y el archivo huérfano.
+- Cloudinary sin configurar responde 503 y Cloudinary caído responde 502. Variables: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET y CLOUDINARY_UPLOAD_PRESET, leídas en cada llamada.
+- En las pruebas, Cloudinary se reemplaza por un falso, y la configuración e2e deja vacías las variables de Cloudinary como red de seguridad: ninguna prueba puede llegar al Cloudinary real.
+- Cliente propio con fetch y la API de administración de Cloudinary, sin su SDK, para no sumar dependencias.
+
 ## Pendiente de validar
 
 - SSR dinámico en Netlify: hasta ahora solo se comprobó la ruta inicial prerenderizada. Verificar el renderizado en el servidor y la caché de las páginas SSR cuando exista una ruta no prerenderizada (por ejemplo, el detalle de una obra).
 - Límite de espera del proxy con un arranque en frío largo: por el proxy se midieron 24 s, pero Render llegó a 32,6 s en una medición directa. No se ha comprobado qué hace la Edge Function si la espera pasa de ahí. Mantener la llamada de "despertar" con mensaje de espera en el login.
 - Reenvío de cuerpos POST en el proxy: afinarlo y validarlo con el login real en producción: cuerpo POST, cabecera X-Requested-With, cookie `__Host-session` de ida y vuelta y arranque en frío de Render.
-- Límite de tamaño por imagen del plan gratuito de Cloudinary: verificarlo antes de la fase de subida de obras.
-- Limpieza de subidas huérfanas en Cloudinary: se define en la fase 3.
+- Cloudinary plan gratuito: 10 MB y 25 MP por imagen (verificado), 25 créditos al mes y sin pago por excedente; si se superan las cuotas de forma continuada, la cuenta se desactiva por partes. El frontend debe reducir en el navegador las fotos que superen 10 MB o 25 MP antes de subirlas. Revisar el consumo de créditos de vez en cuando.
+- Archivos huérfanos en Cloudinary: quedan cuando un navegador sube una foto firmada y no la registra, y cuando falla el borrado de un archivo ya eliminado de la base de datos. Definir una limpieza periódica (comparar los archivos de la carpeta lienzo/artworks con los registrados).
 - Las cadenas de conexión usan sslmode=require; en la próxima versión mayor de pg (v9) cambiará su significado. Plan: cambiar a sslmode=verify-full en apps/api/.env y en las variables de entorno de Render antes de actualizar pg. Por ahora es solo un aviso inofensivo.
 - Las pruebas se ejecutan a mano; evaluar automatizarlas en GitHub Actions con su propia rama de Neon más adelante.
 - Sesiones vencidas que nadie vuelve a usar: quedan en la tabla. SessionsService.deleteExpired existe pero aún no se ejecuta de forma periódica. Definir cuándo (por ejemplo, al iniciar sesión o con una tarea programada).
 - El contador de intentos de login es en memoria; evaluar guardarlo en la base de datos si se vuelve un problema.
+- Render necesita las variables CLOUDINARY_* para que la firma y el registro de fotos funcionen en producción; sin ellas responden 503.
+- RF-19: al publicar, retirar o editar una obra, la API debe purgar la caché de Netlify. Aún no está implementado.
+- Mapa del sitio: debe construirse con PublicCatalogService.listPublishedSlugs (ya existe y está probado), nunca con una consulta propia.
+- Concurrencia: con un solo administrador se aceptan carreras raras (por ejemplo, quitar la foto principal justo mientras otra petición publica la obra). Reevaluar si hubiera más de un administrador.
