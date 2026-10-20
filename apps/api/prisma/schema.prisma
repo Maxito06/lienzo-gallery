@@ -7,7 +7,98 @@ datasource db {
   provider = "postgresql"
 }
 
-model SmokeTest {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
+enum ArtworkStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+
+  @@map("artwork_status")
+}
+
+model Technique {
+  id       String    @id @default(uuid()) @db.Uuid
+  slug     String    @unique
+  nameEs   String    @unique @map("name_es")
+  nameEn   String?   @map("name_en")
+  artworks Artwork[]
+
+  @@map("technique")
+}
+
+model Series {
+  id       String    @id @default(uuid()) @db.Uuid
+  slug     String    @unique
+  nameEs   String    @unique @map("name_es")
+  nameEn   String?   @map("name_en")
+  artworks Artwork[]
+
+  @@map("series")
+}
+
+model Artwork {
+  id                String        @id @default(uuid()) @db.Uuid
+  slug              String        @unique
+  title             String
+  year              Int?
+  widthCm           Decimal?      @map("width_cm") @db.Decimal(6, 1)
+  heightCm          Decimal?      @map("height_cm") @db.Decimal(6, 1)
+  status            ArtworkStatus @default(AVAILABLE)
+  referencePriceCop Int?          @map("reference_price_cop")
+  descriptionEs     String?       @map("description_es")
+  descriptionEn     String?       @map("description_en")
+  techniqueId       String        @map("technique_id") @db.Uuid
+  seriesId          String?       @map("series_id") @db.Uuid
+  publishedAt       DateTime?     @map("published_at") @db.Timestamptz(3)
+  isDemo            Boolean       @default(false) @map("is_demo")
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  technique Technique      @relation(fields: [techniqueId], references: [id], onDelete: Restrict)
+  series    Series?        @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  images    ArtworkImage[]
+
+  @@index([techniqueId])
+  @@index([seriesId])
+  @@index([publishedAt])
+  @@map("artwork")
+}
+
+model ArtworkImage {
+  id                 String   @id @default(uuid()) @db.Uuid
+  artworkId          String   @map("artwork_id") @db.Uuid
+  cloudinaryPublicId String   @map("cloudinary_public_id")
+  position           Int
+  isPrimary          Boolean  @default(false) @map("is_primary")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  artwork Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@index([artworkId])
+  @@map("artwork_image")
+}
+
+model AdminUser {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  sessions AdminSession[]
+
+  @@map("admin_user")
+}
+
+model AdminSession {
+  id          String   @id @default(uuid()) @db.Uuid
+  secretHash  String   @map("secret_hash")
+  adminUserId String   @map("admin_user_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastSeenAt  DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(3)
+
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId])
+  @@index([expiresAt])
+  @@map("admin_session")
 }
