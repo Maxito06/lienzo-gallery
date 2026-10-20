@@ -1,0 +1,16 @@
+.error {
+  color: #b00020;
+  margin: 0 0 1rem;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.25rem 0.75rem;
+  border-bottom: 1px solid #ddd;
+}

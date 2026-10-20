@@ -19,6 +19,16 @@ export const routes: Routes = [
           import('./features/admin/artworks/artworks-page').then((m) => m.ArtworksPage),
       },
       {
+        path: 'artworks/new',
+        loadComponent: () =>
+          import('./features/admin/artworks/artwork-form-page').then((m) => m.ArtworkFormPage),
+      },
+      {
+        path: 'artworks/:id/edit',
+        loadComponent: () =>
+          import('./features/admin/artworks/artwork-form-page').then((m) => m.ArtworkFormPage),
+      },
+      {
         path: 'techniques',
         loadComponent: () =>
           import('./features/admin/techniques/techniques-page').then((m) => m.TechniquesPage),

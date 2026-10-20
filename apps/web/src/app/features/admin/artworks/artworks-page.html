@@ -1,3 +1,72 @@
 <section>
-  <h1>Obras (próximamente)</h1>
+  <h1>Obras</h1>
+
+  @if (errorMessage(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  <!-- New artwork -->
+  <a routerLink="/admin/artworks/new">Nueva obra</a>
+
+  @if (loading()) {
+    <p>Cargando…</p>
+  } @else if (items().length === 0) {
+    <p>Todavía no hay obras.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Título</th>
+          <th scope="col">Técnica</th>
+          <th scope="col">Serie</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Publicación</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr>
+            <td>{{ item.title }}</td>
+            <td>{{ item.technique.nameEs }}</td>
+            <td>{{ item.series?.nameEs ?? '—' }}</td>
+            <td>{{ statusLabels[item.status] }}</td>
+            <td>
+              @if (item.isPublished) {
+                Publicada {{ item.publishedAt | date: 'yyyy-MM-dd' }}
+              } @else {
+                Borrador
+              }
+            </td>
+            <td>
+              <!-- Edit -->
+              <a [routerLink]="['/admin/artworks', item.id, 'edit']">Editar</a>
+              @if (item.isPublished) {
+                <!-- Unpublish -->
+                <button type="button" [disabled]="busyId() === item.id" (click)="unpublish(item.id)">
+                  Despublicar
+                </button>
+              } @else {
+                <!-- Publish -->
+                <button type="button" [disabled]="busyId() === item.id" (click)="publish(item.id)">
+                  Publicar
+                </button>
+              }
+              @if (confirmingId() === item.id) {
+                <!-- Sure? Yes / No -->
+                <span>¿Seguro?</span>
+                <button type="button" [disabled]="busyId() === item.id" (click)="confirmDelete(item.id)">Sí</button>
+                <button type="button" (click)="cancelDelete()">No</button>
+              } @else {
+                <!-- Delete -->
+                <button type="button" [disabled]="busyId() === item.id" (click)="askDelete(item.id)">
+                  Eliminar
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
 </section>
