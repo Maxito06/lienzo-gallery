@@ -113,7 +113,7 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - Cloudinary plan gratuito: 10 MB y 25 MP por imagen (verificado), 25 créditos al mes y sin pago por excedente; si se superan las cuotas de forma continuada, la cuenta se desactiva por partes. El panel ya reduce en el navegador las fotos que superan 10 MB o 25 MP (ver «Imágenes: carpetas dinámicas de Cloudinary»); falta probarlo a mano. Revisar el consumo de créditos de vez en cuando.
 - Archivos huérfanos en Cloudinary: quedan cuando un navegador sube una foto firmada y no la registra, y cuando falla el borrado de un archivo ya eliminado de la base de datos. Definir una limpieza periódica (comparar los archivos de la carpeta lienzo/artworks con los registrados).
 - Las cadenas de conexión usan sslmode=require; en la próxima versión mayor de pg (v9) cambiará su significado. Plan: cambiar a sslmode=verify-full en apps/api/.env y en las variables de entorno de Render antes de actualizar pg. Por ahora es solo un aviso inofensivo.
-- Las pruebas se ejecutan a mano; evaluar automatizarlas en GitHub Actions con su propia rama de Neon más adelante.
+- Las pruebas unitarias y las compilaciones de la API y de la web se ejecutan automáticamente en GitHub Actions (CI). Las e2e de la API y las de Playwright se siguen ejecutando a mano, porque necesitan base de datos y, las segundas, una API en marcha.
 - Sesiones vencidas que nadie vuelve a usar: quedan en la tabla. SessionsService.deleteExpired existe pero aún no se ejecuta de forma periódica. Definir cuándo (por ejemplo, al iniciar sesión o con una tarea programada).
 - El contador de intentos de login es en memoria; evaluar guardarlo en la base de datos si se vuelve un problema.
 - Subida real en producción: Render necesita las variables CLOUDINARY_* (incluido el upload preset firmado) para que la firma y el registro de fotos funcionen; sin ellas responden 503. Falta comprobar también el CORS de la subida directa desde el dominio de Netlify.
@@ -121,7 +121,7 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - El script de seed firma sus subidas con su propia fórmula, sin `public_id`; revisarlo si se vuelve a ejecutar con carpetas dinámicas.
 - La reducción de imágenes con canvas no tiene prueba automática: probar a mano con una foto de más de 10 MB y con un PNG con transparencia.
 - Las peticiones de la web hechas en el servidor (SSR) usan un origen absoluto de la API, tomado de la variable `API_ORIGIN` (`ApiOriginBackend`); en producción hay que definirla en Netlify (ver «Preparación del primer despliegue»).
-- Estado de las pruebas: frontend 157 (Vitest, 2026-10-21; `npx ng test --watch=false`). API: 34 unitarias y 114 e2e según el último conteo (2026-10-20, no actualizado); los e2e se cuentan por los `it(` de `apps/api/test` y los ejecuta Max.
+- Estado de las pruebas (verificado el 2026-10-21; todas pasan): API unitarias, 7 archivos y 42 pruebas (`npm run test`); API e2e contra la rama "test" de Neon, 11 archivos y 114 pruebas (`npm run test:e2e`, las ejecuta una persona); web unitarias con Vitest, 32 archivos y 175 pruebas (`npx ng test --watch=false`); Playwright contra servidores locales, 13 pruebas (`npm run e2e` en `apps/web`; la de login de administrador requiere credenciales en variables de entorno).
 - RF-19: al publicar, retirar o editar una obra, la API debe purgar la caché de Netlify. Aún no está implementado.
 - Mapa del sitio: debe construirse con PublicCatalogService.listPublishedSlugs (ya existe y está probado), nunca con una consulta propia.
 - Concurrencia: con un solo administrador se aceptan carreras raras (por ejemplo, quitar la foto principal justo mientras otra petición publica la obra). Reevaluar si hubiera más de un administrador.
@@ -253,3 +253,38 @@ En la pestaña Actions del repositorio en GitHub, o en las comprobaciones de cad
 - Fase 2: pruebas e2e de la API; requiere un secreto `TEST_DATABASE_URL` con la rama `test` de Neon y las migraciones aplicadas antes.
 - Playwright en CI, con la API y la base de pruebas.
 - Proteger la rama `main` exigiendo que el CI pase antes de fusionar.
+
+## Estado del proyecto (2026-10-21)
+
+### Alcance cumplido
+
+- Galería pública con filtros y paginación.
+- Detalle de obra con vista en pared a escala real y carrusel de fotos.
+- Panel de administración con borradores y publicación.
+- Despliegue en producción: Netlify (web), Render (API), Neon (base de datos) y Cloudinary (imágenes).
+- Contacto por WhatsApp con enlace a la obra.
+- SEO técnico: canonical, datos estructurados, `robots.txt` y sitemap.
+- Salud y monitoreo.
+- Pruebas unitarias, e2e de la API y Playwright, con las cifras de la sección «Pendiente de validar».
+- Integración continua y documentación.
+
+### Pendiente del plan original
+
+- Versión en inglés del sitio (HU-12, TEC-11).
+- Con ella, la línea adicional en español en el mensaje de WhatsApp para visitantes en inglés (HU-04, HU-05).
+
+### Pendientes técnicos
+
+Están descritos en la sección «Limitaciones conocidas y trabajo pendiente» del [README](../../README.md); aquí solo se enumeran:
+
+- Un único administrador, sin cambio de contraseña desde el panel ni doble factor.
+- Textos de portada y de encargos provisionales, y dominio propio pendiente.
+- Pruebas e2e de edición del administrador sobre la rama "test" de Neon.
+- CI sin las e2e de la API ni Playwright, y rama `main` sin protección que exija el CI.
+- Migraciones de Prisma fuera del despliegue de Render.
+- Purga de la caché de Netlify y cabeceras de caché de las rutas públicas (RF-19).
+- Limpieza de archivos huérfanos en Cloudinary y de sesiones vencidas.
+- Limitador de intentos de login en memoria.
+- Revisión del seed con carpetas dinámicas de Cloudinary.
+- Pruebas automáticas de la reducción de imágenes, del proxy y del sitemap.
+- Listas del panel sin paginar.
