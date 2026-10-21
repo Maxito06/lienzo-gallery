@@ -1,1 +1,93 @@
-/* You can add global styles to this file, and also import other style files */
+/* Tipografías autohospedadas (paquetes npm), sin Google Fonts */
+@import '@fontsource/instrument-serif/400.css';
+@import '@fontsource/instrument-serif/400-italic.css';
+@import '@fontsource-variable/hanken-grotesk/wght.css';
+
+:root {
+  --color-bg: #fbfaf8;
+  --color-ink: #1f1d1a;
+  --color-ink-muted: #4c4943;
+  --color-line: #e3e0da;
+  --color-line-strong: #c9c5bd;
+  --color-surface: #f1efeb;
+  --color-chip: #efede8;
+  --color-ok: #2d6a4f;
+  --color-warn: #8a5a00;
+  --color-sold: #6b665d;
+  --font-display: 'Instrument Serif', serif;
+  --font-body: 'Hanken Grotesk Variable', sans-serif;
+  --gutter: 16px;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --gutter: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --gutter: 72px;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+/* Compartidos por el filtro desplegable y el diálogo móvil */
+.option-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover,
+.option[aria-pressed='true'] {
+  background: var(--color-chip);
+}
+
+/* Botón con aspecto de enlace subrayado */
+.text-button {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}

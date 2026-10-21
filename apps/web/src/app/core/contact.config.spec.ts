@@ -1,3 +1,4 @@
+import { BRAND } from './brand.config';
 import {
   WHATSAPP_NUMBER,
   whatsappCommissionLink,
@@ -28,7 +29,7 @@ describe('whatsappLink', () => {
 
 describe('whatsappGeneralLink', () => {
   it('returns a wa.me link with the encoded message, or null when no number is configured', () => {
-    expectLink(whatsappGeneralLink(), 'Hola, quisiera consultar sobre la galería Lienzo.');
+    expectLink(whatsappGeneralLink(), `Hola, quisiera consultar sobre la galería ${BRAND.name}.`);
   });
 });
 

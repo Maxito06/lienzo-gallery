@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { BRAND } from '../../core/brand.config';
 import { WHATSAPP_NUMBER } from '../../core/contact.config';
 import { PublicLayout } from './public-layout';
 
@@ -23,12 +24,13 @@ describe('PublicLayout', () => {
 
   it('renders the navigation and the footer', () => {
     expect(root.querySelector('.skip-link')?.getAttribute('href')).toBe('#contenido');
-    expect(root.querySelector('header a.brand')?.textContent).toBe('Lienzo');
+    expect(root.querySelector('header a.brand')?.textContent).toBe(BRAND.name);
     expect(root.querySelector('nav[aria-label="Principal"] a[href="/"]')?.textContent).toBe('Galería');
     const footer = root.querySelector('footer')!;
-    expect(footer.textContent).toContain('Proyecto de portafolio de Maximiliano Correa Pico');
+    expect(footer.textContent).toContain(`${BRAND.name} · ${BRAND.footerNote}`);
+    expect(footer.textContent).toContain(BRAND.credits);
     const github = footer.querySelector('a')!;
-    expect(github.getAttribute('href')).toBe('https://github.com/Maxito06/lienzo-gallery');
+    expect(github.getAttribute('href')).toBe(BRAND.githubUrl);
     expect(github.getAttribute('rel')).toBe('noopener noreferrer');
   });
 

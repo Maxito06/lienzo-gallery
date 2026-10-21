@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
+import { BRAND } from '../../core/brand.config';
 import { WHATSAPP_NUMBER } from '../../core/contact.config';
 import { GalleryPage } from './gallery-page';
 
@@ -51,7 +52,7 @@ describe('GalleryPage', () => {
   };
 
   const button = (text: string) =>
-    Array.from(root.querySelectorAll('button')).find((b) => b.textContent?.trim() === text)!;
+    Array.from(root.querySelectorAll('button')).find((b) => b.textContent?.replace(/\s+/g, ' ').trim() === text)!;
 
   beforeEach(() => {
     params = new BehaviorSubject(convertToParamMap({}));
@@ -79,11 +80,9 @@ describe('GalleryPage', () => {
     const cards = root.querySelectorAll('ul.grid > li');
     expect(cards.length).toBe(2);
     expect(cards[0].querySelector('img')?.getAttribute('alt')).toBe('Sunset');
-    expect(cards[0].textContent).toContain('Óleo');
+    expect(cards[0].textContent).toContain('Óleo · 2020');
     expect(cards[0].textContent).toContain('Disponible');
-    expect(cards[0].textContent).not.toContain('Obra de demostración');
     expect(cards[1].textContent).toContain('Sin imagen');
-    expect(cards[1].textContent).toContain('Obra de demostración');
     expect(cards[0].querySelector('a')?.getAttribute('href')).toBe('/obras/sunset');
   });
 
@@ -113,7 +112,7 @@ describe('GalleryPage', () => {
   it('shows the empty message when there are no artworks', () => {
     start();
     respond(pageOf([], 1, 0));
-    expect(root.textContent).toContain('No hay obras que coincidan con los filtros.');
+    expect(root.textContent).toContain('No hay obras con estos filtros. Prueba quitando alguno.');
     expect(root.querySelector('ul.grid')).toBeNull();
   });
 
@@ -136,13 +135,111 @@ describe('GalleryPage', () => {
   it('navigates with the selected filter and resets the page', () => {
     start({ page: '2' });
     respond(pageOf([artwork()], 2, 3));
-    const select = root.querySelectorAll('select')[0] as HTMLSelectElement;
-    select.value = 'oleo';
-    select.dispatchEvent(new Event('change'));
+    button('Técnica ▾').click();
+    fixture.detectChanges();
+    button('Óleo').click();
     expect(navigate).toHaveBeenCalledWith([], {
       queryParams: { technique: 'oleo', page: null },
       queryParamsHandling: 'merge',
     });
+    // El panel se cierra al elegir
+    fixture.detectChanges();
+    expect(root.querySelector('#filter-panel-technique')).toBeNull();
+  });
+
+  it('shows the active filter in the trigger and removes it when chosen again', () => {
+    start({ technique: 'oleo' });
+    respond(pageOf([artwork()]));
+    const trigger = button('Técnica: Óleo ▾');
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    trigger.click();
+    fixture.detectChanges();
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(trigger.getAttribute('aria-controls')).toBe('filter-panel-technique');
+    root.querySelector<HTMLButtonElement>('#filter-panel-technique .option')!.click();
+    expect(navigate).toHaveBeenCalledWith([], {
+      queryParams: { technique: null, page: null },
+      queryParamsHandling: 'merge',
+    });
+  });
+
+  it('closes the dropdown with Escape and returns the focus to its button', () => {
+    start();
+    respond(pageOf([artwork()]));
+    document.body.appendChild(root);
+    const trigger = button('Estado ▾');
+    trigger.click();
+    fixture.detectChanges();
+    expect(root.querySelector('#filter-panel-status')).not.toBeNull();
+    root
+      .querySelector('#filter-panel-status')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    expect(root.querySelector('#filter-panel-status')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+    root.remove();
+  });
+
+  it('closes the dropdown when clicking outside', () => {
+    start();
+    respond(pageOf([artwork()]));
+    document.body.appendChild(root);
+    button('Serie ▾').click();
+    fixture.detectChanges();
+    document.body.click();
+    fixture.detectChanges();
+    expect(root.querySelector('#filter-panel-series')).toBeNull();
+    root.remove();
+  });
+
+  it('removes a single filter from its chip and clears all of them', () => {
+    start({ technique: 'oleo', status: 'SOLD' });
+    respond(pageOf([artwork()]));
+    root.querySelector<HTMLButtonElement>('button[aria-label="Quitar filtro Óleo"]')!.click();
+    expect(navigate).toHaveBeenCalledWith([], {
+      queryParams: { technique: null, page: null },
+      queryParamsHandling: 'merge',
+    });
+    root.querySelector<HTMLButtonElement>('.bar .text-button')!.click();
+    expect(navigate).toHaveBeenCalledWith([], {
+      queryParams: { series: null, technique: null, status: null, page: null },
+      queryParamsHandling: 'merge',
+    });
+  });
+
+  it('shows the artwork count with singular and plural', () => {
+    start();
+    respond(pageOf([artwork()]));
+    expect(root.querySelector('.count')?.textContent).toBe('1 obra');
+    params.next(convertToParamMap({ page: '2' }));
+    respond(pageOf([artwork(), artwork({ slug: 'b' })], 2, 2));
+    expect(root.querySelector('.count')?.textContent).toBe('2 obras');
+  });
+
+  it('opens the mobile filters dialog on click', () => {
+    start();
+    respond(pageOf([artwork()]));
+    const dialog = root.querySelector('dialog')!;
+    const showModal = vi.fn();
+    dialog.showModal = showModal;
+    expect(showModal).not.toHaveBeenCalled();
+    button('Filtros').click();
+    expect(showModal).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the empty state with a clear button when filters are active', () => {
+    start({ technique: 'oleo' });
+    respond(pageOf([], 1, 0));
+    const clear = root.querySelector<HTMLButtonElement>('.message .text-button')!;
+    expect(clear.textContent?.trim()).toBe('Limpiar filtros');
+    clear.click();
+    expect(navigate).toHaveBeenCalled();
+  });
+
+  it('hides the pagination when there is a single page', () => {
+    start();
+    respond(pageOf([artwork()], 1, 1));
+    expect(root.querySelector('nav.pagination')).toBeNull();
   });
 
   it('disables previous on the first page and next on the last', () => {
@@ -163,7 +260,7 @@ describe('GalleryPage', () => {
     respond(pageOf([artwork()]));
     const link = root.querySelector('aside a');
     if (WHATSAPP_NUMBER) {
-      expect(root.querySelector('aside h2')?.textContent).toContain('¿Quieres encargar una obra?');
+      expect(root.querySelector('aside h2')?.textContent).toContain(BRAND.commissionTitle);
       expect(link?.getAttribute('href')?.startsWith('https://wa.me/')).toBe(true);
       expect(link?.getAttribute('target')).toBe('_blank');
       expect(link?.getAttribute('rel')).toBe('noopener noreferrer');

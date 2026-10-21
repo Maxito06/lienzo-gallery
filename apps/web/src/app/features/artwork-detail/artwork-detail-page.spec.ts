@@ -1,3 +1,4 @@
+import { BRAND } from '../../core/brand.config';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -97,7 +98,7 @@ describe('ArtworkDetailPage', () => {
     fixture.detectChanges();
     expect(root.textContent).toContain('Obra no encontrada.');
     expect(root.querySelector('a[href="/"]')?.textContent).toContain('Volver a la galería');
-    expect(TestBed.inject(Title).getTitle()).toBe('Obra no encontrada · Lienzo');
+    expect(TestBed.inject(Title).getTitle()).toBe(`Obra no encontrada · ${BRAND.name}`);
     expect(TestBed.inject(Meta).getTag("name='robots'")?.content).toBe('noindex');
   });
 
@@ -163,7 +164,7 @@ describe('ArtworkDetailPage', () => {
   it('sets the title and the Open Graph description', () => {
     load(detail());
     const meta = TestBed.inject(Meta);
-    expect(TestBed.inject(Title).getTitle()).toBe('Sunset · Lienzo');
+    expect(TestBed.inject(Title).getTitle()).toBe(`Sunset · ${BRAND.name}`);
     expect(meta.getTag("name='description'")?.content).toBe('Una puesta de sol.');
     expect(meta.getTag("property='og:description'")?.content).toBe('Una puesta de sol.');
     expect(meta.getTag("property='og:type'")?.content).toBe('article');

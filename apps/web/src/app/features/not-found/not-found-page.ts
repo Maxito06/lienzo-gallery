@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, RESPONSE_INIT, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BRAND } from '../../core/brand.config';
 import { SeoService } from '../../core/seo.service';
 
 @Component({
@@ -16,6 +17,6 @@ export class NotFoundPage {
     if (responseInit) {
       responseInit.status = 404;
     }
-    inject(SeoService).setPage({ title: 'Página no encontrada · Lienzo', noindex: true });
+    inject(SeoService).setPage({ title: `Página no encontrada · ${BRAND.name}`, noindex: true });
   }
 }

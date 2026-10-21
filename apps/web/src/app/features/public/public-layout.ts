@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { BRAND } from '../../core/brand.config';
 import { whatsappGeneralLink } from '../../core/contact.config';
 
 @Component({
@@ -10,5 +11,6 @@ import { whatsappGeneralLink } from '../../core/contact.config';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PublicLayout {
+  protected readonly brand = BRAND;
   protected readonly contactLink = whatsappGeneralLink();
 }

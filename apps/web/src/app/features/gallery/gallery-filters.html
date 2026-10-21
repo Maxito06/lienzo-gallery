@@ -1,0 +1,73 @@
+<div class="bar">
+  @for (group of groups(); track group.key) {
+    <app-filter-dropdown
+      class="dropdown"
+      [filterKey]="group.key"
+      [label]="group.label"
+      [options]="group.options"
+      [value]="values()[group.key]"
+      (chosen)="choose(group.key, $event)"
+    />
+  }
+
+  <!-- Button: Filters (mobile) -->
+  <button type="button" class="mobile-trigger" (click)="openDialog()">
+    Filtros@if (active().length > 0) { ({{ active().length }})}
+  </button>
+
+  @for (filter of active(); track filter.key) {
+    <!-- Button: Remove filter -->
+    <button
+      type="button"
+      class="chip"
+      [attr.aria-label]="'Quitar filtro ' + filter.label"
+      (click)="remove(filter.key)"
+    >
+      {{ filter.label }} <span aria-hidden="true">×</span>
+    </button>
+  }
+
+  @if (active().length > 0) {
+    <!-- Button: Clear filters -->
+    <button type="button" class="text-button" (click)="cleared.emit()">Limpiar filtros</button>
+  }
+
+  @if (totalLabel(); as label) {
+    <p class="count" aria-live="polite">{{ label }}</p>
+  }
+</div>
+
+<dialog #dialog class="mobile-dialog" aria-labelledby="filters-dialog-title">
+  <div class="dialog-body">
+    <h2 id="filters-dialog-title">Filtros</h2>
+    @for (group of groups(); track group.key) {
+      <section>
+        <h3>{{ group.label }}</h3>
+        <ul class="option-list">
+          @for (option of group.options; track option.value) {
+            <li>
+              <!-- Option: filter value -->
+              <button
+                type="button"
+                class="option"
+                [attr.aria-pressed]="option.value === values()[group.key]"
+                (click)="choose(group.key, option.value)"
+              >
+                {{ option.label }}
+                @if (option.value === values()[group.key]) {
+                  <span aria-hidden="true">✓</span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+  <div class="dialog-actions">
+    <!-- Button: Clear filters -->
+    <button type="button" class="text-button" (click)="cleared.emit()">Limpiar filtros</button>
+    <!-- Button: View results -->
+    <button type="button" class="primary" (click)="closeDialog()">Ver resultados</button>
+  </div>
+</dialog>

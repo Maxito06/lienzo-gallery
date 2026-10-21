@@ -2,7 +2,7 @@
 <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
 <header>
-  <a class="brand" routerLink="/">Lienzo</a>
+  <a class="brand" routerLink="/">{{ brand.name }}</a>
   <nav aria-label="Principal">
     <!-- Gallery -->
     <a routerLink="/">Galería</a>
@@ -18,12 +18,10 @@
 </main>
 
 <footer>
+  <p>{{ brand.name }} · {{ brand.footerNote }}</p>
   <p>
-    Lienzo · Proyecto de portafolio de Maximiliano Correa Pico. Las obras mostradas son de dominio
-    público.
+    {{ brand.credits }} ·
+    <!-- Source code on GitHub -->
+    <a [href]="brand.githubUrl" target="_blank" rel="noopener noreferrer">{{ brand.githubLabel }}</a>
   </p>
-  <!-- Source code on GitHub -->
-  <a href="https://github.com/Maxito06/lienzo-gallery" target="_blank" rel="noopener noreferrer"
-    >Código en GitHub</a
-  >
 </footer>

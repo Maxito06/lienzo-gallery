@@ -1,22 +1,28 @@
-import { ChangeDetectionStrategy, Component, afterNextRender, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { Subject, catchError, map, merge, of, switchMap, tap } from 'rxjs';
-import { ARTWORK_STATUS_LABELS, ArtworkStatus } from '../../core/artworks.service';
-import { cloudinaryImageUrl } from '../../core/cloudinary.config';
+import { ArtworkStatus } from '../../core/artworks.service';
+import { BRAND } from '../../core/brand.config';
 import { whatsappCommissionLink } from '../../core/contact.config';
 import { SeoService } from '../../core/seo.service';
+import { ArtworkCard } from './artwork-card';
+import { FilterChange, GalleryFilters } from './gallery-filters';
+import { FilterValues, STATUS_VALUES } from './gallery-filters.model';
 import {
   PublicArtworkPage,
-  PublicArtworkSummary,
   PublicCatalogService,
   PublicFilterOption,
 } from '../../core/public-catalog.service';
 
-const CARD_IMAGE_WIDTH = 600;
-const VALID_STATUSES: ArtworkStatus[] = ['AVAILABLE', 'RESERVED', 'SOLD'];
-
-interface GalleryFilters {
+interface GalleryQuery {
   series: string | null;
   technique: string | null;
   status: ArtworkStatus | null;
@@ -28,24 +34,22 @@ type GalleryState =
   | { kind: 'error' }
   | { kind: 'ready'; data: PublicArtworkPage };
 
-type FilterKey = 'series' | 'technique' | 'status';
-
 // Valores inválidos de la URL se ignoran en vez de provocar un error
-function parseFilters(params: ParamMap): GalleryFilters {
+function parseFilters(params: ParamMap): GalleryQuery {
   const status = params.get('status');
   const page = params.get('page');
   const parsedPage = page !== null && /^\d+$/.test(page) ? Number(page) : 1;
   return {
     series: params.get('series') || null,
     technique: params.get('technique') || null,
-    status: VALID_STATUSES.find((s) => s === status) ?? null,
+    status: STATUS_VALUES.find((s) => s === status) ?? null,
     page: Number.isSafeInteger(parsedPage) && parsedPage >= 1 ? parsedPage : 1,
   };
 }
 
 @Component({
   selector: 'app-gallery-page',
-  imports: [RouterLink],
+  imports: [RouterLink, ArtworkCard, GalleryFilters],
   templateUrl: './gallery-page.html',
   styleUrl: './gallery-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,16 +61,23 @@ export class GalleryPage {
   private readonly retry$ = new Subject<void>();
   private autoRetried = false;
 
+  protected readonly brand = BRAND;
   protected readonly commissionLink = whatsappCommissionLink();
-  protected readonly statusLabels = ARTWORK_STATUS_LABELS;
-  protected readonly statuses = VALID_STATUSES;
-  protected readonly filters = signal<GalleryFilters>({
+  protected readonly filters = signal<GalleryQuery>({
     series: null,
     technique: null,
     status: null,
     page: 1,
   });
   protected readonly state = signal<GalleryState>({ kind: 'loading' });
+  protected readonly filterValues = computed<FilterValues>(() => {
+    const { technique, series, status } = this.filters();
+    return { technique, series, status };
+  });
+  protected readonly total = computed(() => {
+    const state = this.state();
+    return state.kind === 'ready' ? state.data.total : null;
+  });
 
   // Los filtros se piden una sola vez; si fallan, la galería funciona sin ellos
   protected readonly techniques = toSignal(
@@ -80,7 +91,7 @@ export class GalleryPage {
 
   constructor() {
     inject(SeoService).setPage({
-      title: 'Galería · Lienzo',
+      title: `Galería · ${BRAND.name}`,
       description: 'Galería de arte con obras de dominio público: pinturas, técnicas y series.',
     });
 
@@ -125,10 +136,10 @@ export class GalleryPage {
     return series !== null || technique !== null || status !== null;
   }
 
-  protected setFilter(key: FilterKey, value: string): void {
-    // page: null vuelve a la página 1; un valor vacío quita el filtro de la URL
+  protected setFilter({ key, value }: FilterChange): void {
+    // page: null vuelve a la página 1; value null quita el filtro de la URL
     void this.router.navigate([], {
-      queryParams: { [key]: value || null, page: null },
+      queryParams: { [key]: value, page: null },
       queryParamsHandling: 'merge',
     });
   }
@@ -151,9 +162,4 @@ export class GalleryPage {
     this.retry$.next();
   }
 
-  protected imageUrl(item: PublicArtworkSummary): string | null {
-    return item.primaryImagePublicId
-      ? cloudinaryImageUrl(item.primaryImagePublicId, CARD_IMAGE_WIDTH)
-      : null;
-  }
 }

@@ -12,6 +12,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, catchError, map, merge, of, switchMap, tap } from 'rxjs';
 import { ARTWORK_STATUS_LABELS } from '../../core/artworks.service';
+import { BRAND } from '../../core/brand.config';
 import { cloudinaryImageUrl } from '../../core/cloudinary.config';
 import { whatsappLink } from '../../core/contact.config';
 import { PublicArtworkDetail, PublicCatalogService } from '../../core/public-catalog.service';
@@ -19,7 +20,7 @@ import { SeoService, truncateDescription } from '../../core/seo.service';
 
 const MAIN_IMAGE_WIDTH = 1200;
 const THUMB_IMAGE_WIDTH = 120;
-const FALLBACK_DESCRIPTION = 'Obra de la galería Lienzo.';
+const FALLBACK_DESCRIPTION = `Obra de la galería ${BRAND.name}.`;
 
 type DetailState =
   | { kind: 'loading' }
@@ -155,7 +156,7 @@ export class ArtworkDetailPage {
       if (this.responseInit) {
         this.responseInit.status = 404;
       }
-      this.seo.setPage({ title: 'Obra no encontrada · Lienzo', noindex: true });
+      this.seo.setPage({ title: `Obra no encontrada · ${BRAND.name}`, noindex: true });
     }
   }
 
@@ -165,7 +166,7 @@ export class ArtworkDetailPage {
       : FALLBACK_DESCRIPTION;
     const image = primaryPublicId ? cloudinaryImageUrl(primaryPublicId, MAIN_IMAGE_WIDTH) : null;
     this.seo.setPage({
-      title: `${artwork.title} · Lienzo`,
+      title: `${artwork.title} · ${BRAND.name}`,
       description,
       image: image ?? undefined,
       type: 'article',

@@ -1,0 +1,35 @@
+<button
+  #trigger
+  type="button"
+  class="trigger"
+  [class.active]="value() !== null"
+  [class.open]="open()"
+  [attr.aria-expanded]="open()"
+  [attr.aria-controls]="panelId()"
+  (click)="toggle()"
+>
+  {{ label() }}@if (valueLabel(); as current) {: {{ current }}}<span aria-hidden="true"> ▾</span>
+</button>
+
+@if (open()) {
+  <div class="panel" [id]="panelId()">
+    <ul class="option-list">
+      @for (option of options(); track option.value) {
+        <li>
+          <!-- Option: filter value -->
+          <button
+            type="button"
+            class="option"
+            [attr.aria-pressed]="option.value === value()"
+            (click)="choose(option.value)"
+          >
+            {{ option.label }}
+            @if (option.value === value()) {
+              <span aria-hidden="true">✓</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  </div>
+}
