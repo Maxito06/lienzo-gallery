@@ -223,3 +223,33 @@ Pruebas con Playwright (`apps/web/e2e/`) que recorren la web real en Chromium.
 
 - Ejecutarlas en el pipeline (TEC-07) requerirá una API y una base de pruebas propias.
 - Pruebas de edición del administrador (crear, editar, publicar, borrar) sobre la rama `test` de Neon, nunca sobre `main`.
+
+## Integración continua
+
+Pipeline de GitHub Actions en `.github/workflows/ci.yml`. Se ejecuta en cada push a `main` y en cada pull request hacia `main`; una ejecución nueva en la misma rama cancela la anterior.
+
+### Qué ejecuta
+
+- Job `api` (`apps/api`): `npm ci` (su `postinstall` ya genera el cliente de Prisma), `npm run build` y `npm run test` (pruebas unitarias con Vitest).
+- Job `web` (`apps/web`): `npm ci`, `npx ng test --watch=false` (jsdom, sin navegador) y `npx ng build`.
+- Ambos corren en paralelo, en `ubuntu-latest` con Node 24 (la misma que Netlify y `.nvmrc`), con caché de npm y un límite de 15 minutos.
+
+### Qué no ejecuta, y por qué
+
+- Pruebas e2e de la API: borran datos y necesitan una base de datos y secretos.
+- Pruebas Playwright de la web: necesitan la API y la web levantadas y una base de datos.
+- Despliegues: Netlify y Render despliegan por su cuenta.
+
+### Sin secretos
+
+El workflow no usa secretos de GitHub ni cadenas de conexión. `prisma.config.ts` trae una URL falsa por defecto, de modo que `prisma generate` funciona sin variables. Los permisos del workflow son solo de lectura (`contents: read`).
+
+### Ver el resultado
+
+En la pestaña Actions del repositorio en GitHub, o en las comprobaciones de cada pull request.
+
+### Pendientes
+
+- Fase 2: pruebas e2e de la API; requiere un secreto `TEST_DATABASE_URL` con la rama `test` de Neon y las migraciones aplicadas antes.
+- Playwright en CI, con la API y la base de pruebas.
+- Proteger la rama `main` exigiendo que el CI pase antes de fusionar.
