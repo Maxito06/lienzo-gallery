@@ -120,10 +120,32 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - Archivos huérfanos de pruebas: quedaron subidos en Cloudinary los de las subidas fallidas anteriores a la corrección (por ejemplo, `wew11cr2p9bqna6s1mj0`). Borrarlos a mano en la Media Library, sin tocar las imágenes de las 12 obras de demostración. Además de la limpieza periódica general de arriba.
 - El script de seed firma sus subidas con su propia fórmula, sin `public_id`; revisarlo si se vuelve a ejecutar con carpetas dinámicas.
 - La reducción de imágenes con canvas no tiene prueba automática: probar a mano con una foto de más de 10 MB y con un PNG con transparencia.
-- `angular.json` tiene `security.allowedHosts` vacío; revisarlo antes de desplegar en Netlify.
-- Las peticiones de la web hechas en el servidor (SSR) necesitan un origen absoluto de la API; decisión pendiente para la galería pública.
-- `app.routes.ts` tiene una redirección temporal de la raíz a `admin`; se reemplaza por la galería pública.
-- Estado de las pruebas (2026-10-20): frontend 64 (Vitest), API 34 unitarias y 114 e2e. Los e2e se cuentan por los `it(` de `apps/api/test`; los ejecuta Max.
+- Las peticiones de la web hechas en el servidor (SSR) usan un origen absoluto de la API, tomado de la variable `API_ORIGIN` (`ApiOriginBackend`); en producción hay que definirla en Netlify (ver «Preparación del primer despliegue»).
+- Estado de las pruebas: frontend 157 (Vitest, 2026-10-21; `npx ng test --watch=false`). API: 34 unitarias y 114 e2e según el último conteo (2026-10-20, no actualizado); los e2e se cuentan por los `it(` de `apps/api/test` y los ejecuta Max.
 - RF-19: al publicar, retirar o editar una obra, la API debe purgar la caché de Netlify. Aún no está implementado.
 - Mapa del sitio: debe construirse con PublicCatalogService.listPublishedSlugs (ya existe y está probado), nunca con una consulta propia.
 - Concurrencia: con un solo administrador se aceptan carreras raras (por ejemplo, quitar la foto principal justo mientras otra petición publica la obra). Reevaluar si hubiera más de un administrador.
+
+
+## Preparación del primer despliegue
+
+### Configuración manual en el panel de Netlify
+
+- Proyecto `lienzo-gallery` (lienzo-gallery.netlify.app).
+- Base directory: `apps/web`.
+- Variable de entorno `API_ORIGIN` = `https://lienzo-api.onrender.com`. La leen la Edge Function del proxy y el SSR (`ApiOriginBackend`).
+- Los builds están detenidos: reanudarlos solo cuando se vaya a desplegar, porque cada despliegue a producción cuesta 15 créditos.
+
+### Hecho en el código
+
+- `apps/web/angular.json`: `security.allowedHosts` (en las opciones del builder de aplicación) ahora es `["lienzo-gallery.netlify.app"]`. Angular SSR rechaza las peticiones cuyo `Host` no esté en la lista (protección contra SSRF y cabeceras `Host` manipuladas); `localhost` ya está permitido en desarrollo. Si faltara en producción, el servidor no renderizaría las páginas de ese dominio y respondería con error. Si se añade un dominio propio, hay que agregarlo aquí.
+- `apps/web/netlify/edge-functions/api-proxy.ts`: el destino sale de `Netlify.env.get("API_ORIGIN")` y, si falta, usa `https://lienzo-api.onrender.com`. El resto del proxy no cambió. No hay pruebas automáticas de esta función.
+- `apps/web/netlify.toml`: `command = "npm run build"` explícito. El `.nvmrc` (Node 24) está en la raíz del repositorio y no en `apps/web`, así que se añadió `NODE_VERSION = "24"` en `[build.environment]`.
+
+### Pendientes del despliegue
+
+- `sitemap.xml` (con `PublicCatalogService.listPublishedSlugs`), `robots.txt` y URLs canónicas.
+- Número de WhatsApp en una variable de configuración (hoy está en `core/contact.config.ts`).
+- Purga de la caché de Netlify al publicar, retirar o editar una obra (RF-19) y cabeceras de caché de las rutas públicas.
+- Migraciones de Prisma en el pipeline de Render (hoy no hay un paso que las aplique).
+- Comprobar en producción el SSR dinámico, el login a través del proxy y el CORS de la subida directa a Cloudinary.

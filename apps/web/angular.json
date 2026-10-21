@@ -30,7 +30,7 @@
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {
-              "allowedHosts": []
+              "allowedHosts": ["lienzo-gallery.netlify.app"]
             },
             "ssr": {
               "entry": "src/server.ts"
