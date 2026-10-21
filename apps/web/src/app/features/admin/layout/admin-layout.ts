@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
+import { BRAND } from '../../../core/brand.config';
 import { SeoService } from '../../../core/seo.service';
 
 @Component({
@@ -12,11 +13,12 @@ import { SeoService } from '../../../core/seo.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminLayout {
+  protected readonly brand = BRAND;
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   constructor() {
-    inject(SeoService).setPage({ title: 'Administración · Lienzo', noindex: true });
+    inject(SeoService).setPage({ title: `Administración · ${BRAND.name}`, noindex: true });
   }
 
   protected logout(): void {

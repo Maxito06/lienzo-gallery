@@ -1,22 +1,22 @@
-<section>
-  <h1>{{ isEdit ? 'Editar obra' : 'Nueva obra' }}</h1>
+<section class="adm-page">
+  <h1 class="adm-title">{{ isEdit ? 'Editar obra' : 'Nueva obra' }}</h1>
 
   @if (errorMessage(); as message) {
-    <p class="error" role="alert">{{ message }}</p>
+    <p class="adm-alert adm-alert--error" role="alert">{{ message }}</p>
   }
 
   @if (loading()) {
-    <p>Cargando…</p>
+    <p class="adm-hint">Cargando…</p>
   } @else {
     @if (techniques().length === 0) {
-      <p role="status">
+      <p class="adm-alert adm-alert--error" role="status">
         Primero crea una técnica.
         <a routerLink="/admin/techniques">Ir a técnicas</a>
       </p>
     }
 
     @if (artwork(); as current) {
-      <dl>
+      <dl class="info">
         <dt>Slug</dt>
         <dd>{{ current.slug }}</dd>
         <dt>Publicación</dt>
@@ -24,99 +24,127 @@
       </dl>
     }
 
-    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
-      <div class="field">
-        <label for="title">Título</label>
-        <input id="title" type="text" formControlName="title" maxlength="120" />
-        @if (form.controls.title.touched && form.controls.title.invalid) {
-          <p class="field-error">Escribe el título (máximo 120 caracteres).</p>
-        }
-      </div>
-
-      <div class="field">
-        <label for="techniqueId">Técnica</label>
-        <select id="techniqueId" formControlName="techniqueId">
-          <option value="">Selecciona una técnica</option>
-          @for (technique of techniques(); track technique.id) {
-            <option [value]="technique.id">{{ technique.nameEs }}</option>
+    <form class="adm-card" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="adm-form-grid">
+        <div class="adm-field adm-span-2">
+          <label for="title">Título</label>
+          <input id="title" type="text" formControlName="title" maxlength="120" />
+          @if (form.controls.title.touched && form.controls.title.invalid) {
+            <p class="adm-error field-error">Escribe el título (máximo 120 caracteres).</p>
           }
-        </select>
-        @if (form.controls.techniqueId.touched && form.controls.techniqueId.invalid) {
-          <p class="field-error">Selecciona una técnica.</p>
-        }
-      </div>
+        </div>
 
-      <div class="field">
-        <label for="seriesId">Serie</label>
-        <select id="seriesId" formControlName="seriesId">
-          <option value="">Sin serie</option>
-          @for (series of seriesList(); track series.id) {
-            <option [value]="series.id">{{ series.nameEs }}</option>
+        <div class="adm-field">
+          <label for="techniqueId">Técnica</label>
+          <select id="techniqueId" formControlName="techniqueId">
+            <option value="">Selecciona una técnica</option>
+            @for (technique of techniques(); track technique.id) {
+              <option [value]="technique.id">{{ technique.nameEs }}</option>
+            }
+          </select>
+          @if (form.controls.techniqueId.touched && form.controls.techniqueId.invalid) {
+            <p class="adm-error field-error">Selecciona una técnica.</p>
           }
-        </select>
-      </div>
+        </div>
 
-      <div class="field">
-        <label for="year">Año (opcional)</label>
-        <input id="year" type="number" formControlName="year" />
-        @if (form.controls.year.touched && form.controls.year.invalid) {
-          <p class="field-error">Escribe un año entero entre 1000 y 2100.</p>
-        }
-      </div>
+        <div class="adm-field">
+          <label for="seriesId">Serie</label>
+          <select id="seriesId" formControlName="seriesId">
+            <option value="">Sin serie</option>
+            @for (series of seriesList(); track series.id) {
+              <option [value]="series.id">{{ series.nameEs }}</option>
+            }
+          </select>
+        </div>
 
-      <div class="field">
-        <label for="widthCm">Ancho en cm (opcional)</label>
-        <input id="widthCm" type="number" step="0.1" formControlName="widthCm" />
-        @if (form.controls.widthCm.touched && form.controls.widthCm.invalid) {
-          <p class="field-error">Escribe un valor positivo de hasta 9999.9 con un decimal.</p>
-        }
-      </div>
-
-      <div class="field">
-        <label for="heightCm">Alto en cm (opcional)</label>
-        <input id="heightCm" type="number" step="0.1" formControlName="heightCm" />
-        @if (form.controls.heightCm.touched && form.controls.heightCm.invalid) {
-          <p class="field-error">Escribe un valor positivo de hasta 9999.9 con un decimal.</p>
-        }
-      </div>
-
-      <div class="field">
-        <label for="status">Estado de venta</label>
-        <select id="status" formControlName="status">
-          @for (option of statusOptions; track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
+        <div class="adm-field">
+          <label for="year">Año (opcional)</label>
+          <input id="year" type="number" formControlName="year" />
+          @if (form.controls.year.touched && form.controls.year.invalid) {
+            <p class="adm-error field-error">Escribe un año entero entre 1000 y 2100.</p>
           }
-        </select>
+        </div>
+
+        <div class="adm-field">
+          <label for="widthCm">Ancho en cm (opcional)</label>
+          <input id="widthCm" type="number" step="0.1" formControlName="widthCm" />
+          @if (form.controls.widthCm.touched && form.controls.widthCm.invalid) {
+            <p class="adm-error field-error">
+              Escribe un valor positivo de hasta 9999.9 con un decimal.
+            </p>
+          }
+        </div>
+
+        <div class="adm-field">
+          <label for="heightCm">Alto en cm (opcional)</label>
+          <input id="heightCm" type="number" step="0.1" formControlName="heightCm" />
+          @if (form.controls.heightCm.touched && form.controls.heightCm.invalid) {
+            <p class="adm-error field-error">
+              Escribe un valor positivo de hasta 9999.9 con un decimal.
+            </p>
+          }
+        </div>
+
+        <div class="adm-field">
+          <label for="status">Estado de venta</label>
+          <select id="status" formControlName="status">
+            @for (option of statusOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="adm-field">
+          <label for="referencePriceCop">Precio de referencia en COP (opcional)</label>
+          <input id="referencePriceCop" type="number" formControlName="referencePriceCop" />
+          @if (form.controls.referencePriceCop.touched && form.controls.referencePriceCop.invalid) {
+            <p class="adm-error field-error">Escribe un entero entre 1 y 2.000.000.000.</p>
+          }
+        </div>
+
+        <div class="adm-field adm-span-2">
+          <label for="descriptionEs">Descripción en español (opcional)</label>
+          <textarea
+            id="descriptionEs"
+            rows="4"
+            formControlName="descriptionEs"
+            maxlength="2000"
+          ></textarea>
+          @if (form.controls.descriptionEs.touched && form.controls.descriptionEs.invalid) {
+            <p class="adm-error field-error">
+              La descripción es demasiado larga (máximo 2000 caracteres).
+            </p>
+          }
+        </div>
+
+        <div class="adm-field adm-span-2">
+          <label for="descriptionEn">Descripción en inglés (opcional)</label>
+          <textarea
+            id="descriptionEn"
+            rows="4"
+            formControlName="descriptionEn"
+            maxlength="2000"
+          ></textarea>
+          @if (form.controls.descriptionEn.touched && form.controls.descriptionEn.invalid) {
+            <p class="adm-error field-error">
+              La descripción es demasiado larga (máximo 2000 caracteres).
+            </p>
+          }
+        </div>
       </div>
 
-      <div class="field">
-        <label for="referencePriceCop">Precio de referencia en COP (opcional)</label>
-        <input id="referencePriceCop" type="number" formControlName="referencePriceCop" />
-        @if (form.controls.referencePriceCop.touched && form.controls.referencePriceCop.invalid) {
-          <p class="field-error">Escribe un entero entre 1 y 2.000.000.000.</p>
-        }
+      <div class="adm-actions actions">
+        <!-- Save -->
+        <button
+          type="submit"
+          class="adm-btn adm-btn--primary"
+          [disabled]="saving() || techniques().length === 0"
+        >
+          Guardar
+        </button>
+        <!-- Cancel -->
+        <button type="button" class="adm-btn" (click)="cancel()">Cancelar</button>
       </div>
-
-      <div class="field">
-        <label for="descriptionEs">Descripción en español (opcional)</label>
-        <textarea id="descriptionEs" rows="4" formControlName="descriptionEs" maxlength="2000"></textarea>
-        @if (form.controls.descriptionEs.touched && form.controls.descriptionEs.invalid) {
-          <p class="field-error">La descripción es demasiado larga (máximo 2000 caracteres).</p>
-        }
-      </div>
-
-      <div class="field">
-        <label for="descriptionEn">Descripción en inglés (opcional)</label>
-        <textarea id="descriptionEn" rows="4" formControlName="descriptionEn" maxlength="2000"></textarea>
-        @if (form.controls.descriptionEn.touched && form.controls.descriptionEn.invalid) {
-          <p class="field-error">La descripción es demasiado larga (máximo 2000 caracteres).</p>
-        }
-      </div>
-
-      <!-- Save -->
-      <button type="submit" [disabled]="saving() || techniques().length === 0">Guardar</button>
-      <!-- Cancel -->
-      <button type="button" (click)="cancel()">Cancelar</button>
     </form>
 
     @if (artwork(); as current) {
@@ -127,7 +155,7 @@
         (changed)="reloadArtwork()"
       />
     } @else if (!isEdit) {
-      <p>Guarda la obra para poder añadir imágenes.</p>
+      <p class="adm-hint">Guarda la obra para poder añadir imágenes.</p>
     }
   }
 </section>

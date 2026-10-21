@@ -1,25 +1,19 @@
-.field {
+form {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
-  max-width: 24rem;
+  gap: 16px;
+  max-width: 480px;
 }
 
-.field-error,
-.error {
-  color: #b00020;
+.form-title {
   margin: 0;
+  font-size: 22px;
 }
 
-table {
-  border-collapse: collapse;
-  margin-top: 1rem;
+.adm-new {
+  align-self: flex-start;
 }
 
-th,
-td {
-  text-align: left;
-  padding: 0.25rem 0.75rem;
-  border-bottom: 1px solid #ddd;
+.actions {
+  gap: 12px;
 }

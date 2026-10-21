@@ -1,24 +1,32 @@
-.images {
-  list-style: none;
+h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+
+.images,
+.uploads {
+  margin: 16px 0;
   padding: 0;
+  list-style: none;
 }
 
 .images li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #ddd;
+  gap: 8px 16px;
+  padding: 12px;
+  border: 1px solid var(--color-line);
+}
+
+.images li + li {
+  margin-top: 8px;
+}
+
+.images img {
+  display: block;
 }
 
 .upload {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin: 1rem 0;
-}
-
-.error {
-  color: #b00020;
+  margin: 16px 0;
 }

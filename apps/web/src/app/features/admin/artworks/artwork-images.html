@@ -1,16 +1,16 @@
-<section>
+<section class="adm-card">
   <h2>Imágenes</h2>
 
   @if (errorMessage(); as message) {
-    <p class="error" role="alert">{{ message }}</p>
+    <p class="adm-alert adm-alert--error" role="alert">{{ message }}</p>
   }
 
   @if (published() && images().length === 1) {
-    <p>La obra está publicada: no puedes eliminar su única imagen.</p>
+    <p class="adm-hint">La obra está publicada: no puedes eliminar su única imagen.</p>
   }
 
   @if (sortedImages().length === 0) {
-    <p>Todavía no hay imágenes.</p>
+    <p class="adm-empty">Todavía no hay imágenes.</p>
   } @else {
     <ul class="images">
       @for (image of sortedImages(); track image.id; let i = $index; let last = $last) {
@@ -18,38 +18,73 @@
           @if (thumbnail(image.cloudinaryPublicId); as url) {
             <img [src]="url" alt="" width="120" />
           } @else {
-            <span>Miniatura no disponible (falta configurar el nombre de la nube)</span>
+            <span class="adm-hint">Miniatura no disponible (falta configurar el nombre de la nube)</span>
           }
 
           @if (image.isPrimary) {
-            <strong>Principal</strong>
+            <strong class="adm-badge adm-badge--ok">Principal</strong>
           } @else {
             <!-- Make primary -->
-            <button type="button" [disabled]="busy() || uploading()" (click)="makePrimary(image.id)">
+            <button
+              type="button"
+              class="adm-btn"
+              [disabled]="busy() || uploading()"
+              (click)="makePrimary(image.id)"
+            >
               Hacer principal
             </button>
           }
 
-          <!-- Move up -->
-          <button type="button" [disabled]="busy() || uploading() || i === 0" (click)="move(i, -1)">Subir</button>
-          <!-- Move down -->
-          <button type="button" [disabled]="busy() || uploading() || last" (click)="move(i, 1)">Bajar</button>
+          <div class="adm-actions">
+            <!-- Move up -->
+            <button
+              type="button"
+              class="adm-btn adm-btn--link"
+              [disabled]="busy() || uploading() || i === 0"
+              (click)="move(i, -1)"
+            >
+              Subir
+            </button>
+            <!-- Move down -->
+            <button
+              type="button"
+              class="adm-btn adm-btn--link"
+              [disabled]="busy() || uploading() || last"
+              (click)="move(i, 1)"
+            >
+              Bajar
+            </button>
 
-          @if (confirmingId() === image.id) {
-            <!-- Sure? Yes / No -->
-            <span>¿Seguro?</span>
-            <button type="button" [disabled]="busy()" (click)="confirmDelete(image.id)">Sí</button>
-            <button type="button" (click)="cancelDelete()">No</button>
-          } @else {
-            <!-- Delete -->
-            <button type="button" [disabled]="busy() || uploading()" (click)="askDelete(image.id)">Eliminar</button>
-          }
+            @if (confirmingId() === image.id) {
+              <!-- Sure? Yes / No -->
+              <span>¿Seguro?</span>
+              <button
+                type="button"
+                class="adm-btn adm-btn--danger"
+                [disabled]="busy()"
+                (click)="confirmDelete(image.id)"
+              >
+                Sí
+              </button>
+              <button type="button" class="adm-btn" (click)="cancelDelete()">No</button>
+            } @else {
+              <!-- Delete -->
+              <button
+                type="button"
+                class="adm-btn adm-btn--danger"
+                [disabled]="busy() || uploading()"
+                (click)="askDelete(image.id)"
+              >
+                Eliminar
+              </button>
+            }
+          </div>
         </li>
       }
     </ul>
   }
 
-  <div class="upload">
+  <div class="upload adm-field">
     <!-- Add images -->
     <label for="imageFiles">Añadir imágenes</label>
     <input
@@ -61,17 +96,19 @@
       (change)="onFilesSelected($event)"
     />
     @if (atLimit()) {
-      <p>Máximo {{ maxImages }} imágenes por obra.</p>
+      <p class="adm-hint">Máximo {{ maxImages }} imágenes por obra.</p>
     }
     @if (notice(); as text) {
-      <p>{{ text }}</p>
+      <p class="adm-hint">{{ text }}</p>
     }
   </div>
 
   @if (uploads().length > 0) {
-    <ul role="status">
+    <ul role="status" class="uploads">
       @for (upload of uploads(); track $index) {
-        <li [class.error]="upload.failed">{{ upload.name }}: {{ upload.phase }}</li>
+        <li [class.adm-error]="upload.failed" [class.adm-hint]="!upload.failed">
+          {{ upload.name }}: {{ upload.phase }}
+        </li>
       }
     </ul>
   }

@@ -1,83 +1,116 @@
-<section>
-  <h1>Obras</h1>
+<section class="adm-page">
+  <div class="adm-toolbar">
+    <h1 class="adm-title">Obras</h1>
+    <!-- New artwork -->
+    <a class="adm-btn adm-btn--primary" routerLink="/admin/artworks/new">Nueva obra</a>
+  </div>
 
   @if (errorMessage(); as message) {
-    <p class="error" role="alert">{{ message }}</p>
+    <p class="adm-alert adm-alert--error" role="alert">{{ message }}</p>
   }
 
-  <!-- New artwork -->
-  <a routerLink="/admin/artworks/new">Nueva obra</a>
-
   @if (loading()) {
-    <p>Cargando…</p>
+    <p class="adm-hint">Cargando…</p>
   } @else if (items().length === 0) {
-    <p>Todavía no hay obras.</p>
+    <p class="adm-empty">Todavía no hay obras.</p>
   } @else {
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">Imagen</th>
-          <th scope="col">Título</th>
-          <th scope="col">Técnica</th>
-          <th scope="col">Serie</th>
-          <th scope="col">Estado</th>
-          <th scope="col">Publicación</th>
-          <th scope="col">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of items(); track item.id) {
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead>
           <tr>
-            <td>
-              @if (thumbnail(item.primaryImagePublicId); as url) {
-                <img [src]="url" alt="" width="80" />
-              }
-            </td>
-            <td>
-              {{ item.title }}
-              @if (item.isDemo) {
-                <strong>Demo</strong>
-              }
-            </td>
-            <td>{{ item.technique.nameEs }}</td>
-            <td>{{ item.series?.nameEs ?? '—' }}</td>
-            <td>{{ statusLabels[item.status] }}</td>
-            <td>
-              @if (item.isPublished) {
-                Publicada {{ item.publishedAt | date: 'yyyy-MM-dd' }}
-              } @else {
-                Borrador
-              }
-            </td>
-            <td>
-              <!-- Edit -->
-              <a [routerLink]="['/admin/artworks', item.id, 'edit']">Editar</a>
-              @if (item.isPublished) {
-                <!-- Unpublish -->
-                <button type="button" [disabled]="busyId() === item.id" (click)="unpublish(item.id)">
-                  Despublicar
-                </button>
-              } @else {
-                <!-- Publish -->
-                <button type="button" [disabled]="busyId() === item.id" (click)="publish(item.id)">
-                  Publicar
-                </button>
-              }
-              @if (confirmingId() === item.id) {
-                <!-- Sure? Yes / No -->
-                <span>¿Seguro?</span>
-                <button type="button" [disabled]="busyId() === item.id" (click)="confirmDelete(item.id)">Sí</button>
-                <button type="button" (click)="cancelDelete()">No</button>
-              } @else {
-                <!-- Delete -->
-                <button type="button" [disabled]="busyId() === item.id" (click)="askDelete(item.id)">
-                  Eliminar
-                </button>
-              }
-            </td>
+            <th scope="col">Imagen</th>
+            <th scope="col">Título</th>
+            <th scope="col">Técnica</th>
+            <th scope="col">Serie</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Publicación</th>
+            <th scope="col">Acciones</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr>
+              <td>
+                @if (thumbnail(item.primaryImagePublicId); as url) {
+                  <img [src]="url" alt="" width="80" />
+                }
+              </td>
+              <td>
+                {{ item.title }}
+                @if (item.isDemo) {
+                  <strong class="adm-badge adm-badge--muted">Demo</strong>
+                }
+              </td>
+              <td>{{ item.technique.nameEs }}</td>
+              <td>{{ item.series?.nameEs ?? '—' }}</td>
+              <td>
+                <span [class]="'adm-badge ' + saleBadge(item.status)">{{
+                  statusLabels[item.status]
+                }}</span>
+              </td>
+              <td>
+                <span [class]="'adm-badge ' + publicationBadge(item.isPublished)">
+                  @if (item.isPublished) {
+                    Publicada {{ item.publishedAt | date: 'yyyy-MM-dd' }}
+                  } @else {
+                    Borrador
+                  }
+                </span>
+              </td>
+              <td>
+                <div class="adm-row-actions">
+                  <!-- Edit -->
+                  <a class="adm-btn adm-btn--link" [routerLink]="['/admin/artworks', item.id, 'edit']">Editar</a>
+                  @if (item.isPublished) {
+                    <!-- Unpublish -->
+                    <button
+                      type="button"
+                      class="adm-btn"
+                      [disabled]="busyId() === item.id"
+                      (click)="unpublish(item.id)"
+                    >
+                      Despublicar
+                    </button>
+                  } @else {
+                    <!-- Publish -->
+                    <button
+                      type="button"
+                      class="adm-btn"
+                      [disabled]="busyId() === item.id"
+                      (click)="publish(item.id)"
+                    >
+                      Publicar
+                    </button>
+                  }
+                  @if (confirmingId() === item.id) {
+                    <!-- Sure? Yes / No -->
+                    <span>¿Seguro?</span>
+                    <button
+                      type="button"
+                      class="adm-btn adm-btn--danger"
+                      [disabled]="busyId() === item.id"
+                      (click)="confirmDelete(item.id)"
+                    >
+                      Sí
+                    </button>
+                    <button type="button" class="adm-btn" (click)="cancelDelete()">No</button>
+                  } @else {
+                    <!-- Delete -->
+                    <button
+                      type="button"
+                      class="adm-btn adm-btn--danger"
+                      [disabled]="busyId() === item.id"
+                      (click)="askDelete(item.id)"
+                    >
+                      Eliminar
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </section>

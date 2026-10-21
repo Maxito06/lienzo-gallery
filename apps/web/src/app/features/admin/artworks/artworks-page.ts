@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ARTWORK_STATUS_LABELS, ArtworkSummary, ArtworksService } from '../../../core/artworks.service';
+import { publicationBadgeClass, saleStatusBadgeClass } from '../status-badge';
 import { cloudinaryImageUrl } from '../../../core/cloudinary.config';
 
 type FailedAction = 'load' | 'publish' | 'unpublish' | 'delete';
@@ -12,13 +13,14 @@ type FailedAction = 'load' | 'publish' | 'unpublish' | 'delete';
   selector: 'app-artworks-page',
   imports: [DatePipe, RouterLink],
   templateUrl: './artworks-page.html',
-  styleUrl: './artworks-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArtworksPage implements OnInit {
   private readonly artworks = inject(ArtworksService);
 
   protected readonly statusLabels = ARTWORK_STATUS_LABELS;
+  protected readonly saleBadge = saleStatusBadgeClass;
+  protected readonly publicationBadge = publicationBadgeClass;
 
   protected thumbnail(publicId: string | null): string | null {
     return publicId ? cloudinaryImageUrl(publicId, 80) : null;

@@ -16,6 +16,11 @@
   --color-sold: #6b665d;
   --font-display: 'Instrument Serif', serif;
   --font-body: 'Hanken Grotesk Variable', sans-serif;
+  --color-danger: #9b2226;
+  --color-danger-bg: #fbeeee;
+  --color-danger-line: #e5b8b8;
+  --color-ok-bg: #eef6f1;
+  --color-ok-line: #b9d6c4;
   --gutter: 16px;
 }
 
@@ -90,4 +95,255 @@ h2 {
   font-size: 14px;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* ---- Panel de administración: estilos compartidos (prefijo adm-) ---- */
+.adm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-sizing: border-box;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px var(--gutter);
+}
+
+.adm-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.adm-subtitle {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: 15px;
+}
+
+/* Título a la izquierda y acción a la derecha */
+.adm-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.adm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.adm-card {
+  box-sizing: border-box;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--color-line);
+}
+
+@media (min-width: 640px) {
+  .adm-card {
+    padding: 24px;
+  }
+}
+
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--color-ink);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.adm-btn--primary {
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+
+.adm-btn--danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.adm-btn--danger:hover:not(:disabled) {
+  background: var(--color-danger-bg);
+}
+
+.adm-btn--link {
+  border-color: transparent;
+  text-decoration: underline;
+}
+
+.adm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.adm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adm-field label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.adm-field input,
+.adm-field textarea,
+.adm-field select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 0;
+  background: #fff;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 15px;
+}
+
+.adm-field input:focus,
+.adm-field textarea:focus,
+.adm-field select:focus {
+  border-color: var(--color-ink);
+}
+
+.adm-field .adm-invalid,
+.adm-field .ng-invalid.ng-touched {
+  border-color: var(--color-danger);
+}
+
+.adm-hint {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+
+.adm-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.adm-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px 24px;
+}
+
+@media (min-width: 768px) {
+  .adm-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .adm-span-2 {
+    grid-column: 1 / -1;
+  }
+}
+
+.adm-table-wrap {
+  overflow-x: auto;
+}
+
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.adm-table th {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-line-strong);
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.adm-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: middle;
+}
+
+.adm-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid currentColor;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.adm-badge--ok {
+  background: var(--color-ok-bg);
+  color: var(--color-ok);
+}
+
+.adm-badge--warn {
+  background: #fbf3e2;
+  color: var(--color-warn);
+}
+
+.adm-badge--muted {
+  background: var(--color-chip);
+  color: var(--color-sold);
+}
+
+.adm-badge--draft {
+  border-color: var(--color-line-strong);
+  background: transparent;
+  color: var(--color-ink-muted);
+}
+
+.adm-alert {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid;
+  font-size: 14px;
+}
+
+.adm-alert--error {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-line);
+  color: var(--color-danger);
+}
+
+.adm-alert--success {
+  background: var(--color-ok-bg);
+  border-color: var(--color-ok-line);
+  color: var(--color-ok);
+}
+
+.adm-empty {
+  padding: 48px 16px;
+  border: 1px dashed var(--color-line-strong);
+  color: var(--color-ink-muted);
+  text-align: center;
+}
+
+/* Acciones de una fila de tabla: siempre apiladas y del mismo ancho */
+.adm-row-actions {
+  display: grid;
+  gap: 8px;
+  justify-items: stretch;
+  width: 160px;
+  min-width: 160px;
+  text-align: center;
 }

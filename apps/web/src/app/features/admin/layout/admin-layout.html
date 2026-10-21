@@ -1,4 +1,8 @@
 <header class="bar">
+  <div class="brand">
+    <span class="name">{{ brand.name }}</span>
+    <span class="tag">Administración</span>
+  </div>
   <nav aria-label="Panel de administración">
     <a routerLink="/admin/artworks" routerLinkActive="active">Obras</a>
     <a routerLink="/admin/techniques" routerLinkActive="active">Técnicas</a>
@@ -7,7 +11,7 @@
   <div class="session">
     <span>{{ auth.user()?.email }}</span>
     <!-- Log out -->
-    <button type="button" (click)="logout()">Cerrar sesión</button>
+    <button type="button" class="adm-btn adm-btn--link" (click)="logout()">Cerrar sesión</button>
   </div>
 </header>
 

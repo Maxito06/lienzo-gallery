@@ -16,3 +16,12 @@
 - Se puede alternar a "Solo la obra". Si no hay medidas, o la obra no cabe (`top` < 3 %, ancho > 80 % o `left` < 3 %), no hay vista de pared ni selector: solo se muestra la foto.
 - La imagen de la sala es una imagen generada con IA, propiedad del dueño, y está en `apps/web/public/images/sala-demo.jpg`.
 - No añade peso relevante: es un único archivo cacheable, y la foto de la obra reutiliza los anchos de Cloudinary que ya existían (600 y 1200).
+
+## Panel de administración
+
+- Sencillo y funcional: orden y legibilidad antes que decoración.
+- Comparte los tokens de color y las fuentes de la web pública (Instrument Serif para títulos, Hanken Grotesk para texto).
+- Los estilos compartidos llevan el prefijo `adm-` y viven en `apps/web/src/styles.css` (página, tarjeta, botones, formularios, tabla, insignias y avisos), de modo que los componentes casi no necesitan CSS propio.
+- Las insignias de estado siempre muestran el texto (Publicada, Borrador, Disponible, Reservada, Vendida); el color no es el único indicador. El mapeo estado → variante está en `features/admin/status-badge.ts`.
+- Sin librerías de UI ni animaciones.
+- El admin no se indexa: sus páginas fijan `noindex` mediante `SeoService`.

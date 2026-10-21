@@ -1,13 +1,20 @@
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
-  max-width: 28rem;
+.info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 14px;
 }
 
-.field-error,
-.error {
-  color: #b00020;
+.info dt {
+  color: var(--color-ink-muted);
+}
+
+.info dd {
   margin: 0;
+}
+
+.actions {
+  margin-top: 24px;
+  gap: 12px;
 }

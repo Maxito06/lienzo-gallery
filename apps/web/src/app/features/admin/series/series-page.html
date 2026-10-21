@@ -1,74 +1,98 @@
-<section>
-  <h1>Series</h1>
+<section class="adm-page">
+  <h1 class="adm-title">Series</h1>
 
   @if (errorMessage(); as message) {
-    <p class="error" role="alert">{{ message }}</p>
+    <p class="adm-alert adm-alert--error" role="alert">{{ message }}</p>
   }
 
   @if (!formOpen()) {
     <!-- New series -->
-    <button type="button" (click)="newItem()">Nueva serie</button>
+    <button type="button" class="adm-btn adm-btn--primary adm-new" (click)="newItem()">
+      Nueva serie
+    </button>
   } @else {
-    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
-      <h2>{{ editingId() ? 'Editar serie' : 'Nueva serie' }}</h2>
+    <form class="adm-card" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <h2 class="form-title">{{ editingId() ? 'Editar serie' : 'Nueva serie' }}</h2>
 
-      <div class="field">
+      <div class="adm-field">
         <label for="nameEs">Nombre en español</label>
         <input id="nameEs" type="text" formControlName="nameEs" maxlength="80" />
         @if (form.controls.nameEs.touched && form.controls.nameEs.invalid) {
-          <p class="field-error">Escribe el nombre en español (máximo 80 caracteres).</p>
+          <p class="adm-error field-error">Escribe el nombre en español (máximo 80 caracteres).</p>
         }
       </div>
 
-      <div class="field">
+      <div class="adm-field">
         <label for="nameEn">Nombre en inglés (opcional)</label>
         <input id="nameEn" type="text" formControlName="nameEn" maxlength="80" />
         @if (form.controls.nameEn.touched && form.controls.nameEn.invalid) {
-          <p class="field-error">El nombre es demasiado largo (máximo 80 caracteres).</p>
+          <p class="adm-error field-error">El nombre es demasiado largo (máximo 80 caracteres).</p>
         }
       </div>
 
-      <!-- Save -->
-      <button type="submit" [disabled]="saving()">Guardar</button>
-      <!-- Cancel -->
-      <button type="button" (click)="cancel()">Cancelar</button>
+      <div class="adm-actions actions">
+        <!-- Save -->
+        <button type="submit" class="adm-btn adm-btn--primary" [disabled]="saving()">
+          Guardar
+        </button>
+        <!-- Cancel -->
+        <button type="button" class="adm-btn" (click)="cancel()">Cancelar</button>
+      </div>
     </form>
   }
 
   @if (loading()) {
-    <p>Cargando…</p>
+    <p class="adm-hint">Cargando…</p>
   } @else if (items().length === 0) {
-    <p>Todavía no hay series.</p>
+    <p class="adm-empty">Todavía no hay series.</p>
   } @else {
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">Nombre (ES)</th>
-          <th scope="col">Nombre (EN)</th>
-          <th scope="col">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of items(); track item.id) {
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead>
           <tr>
-            <td>{{ item.nameEs }}</td>
-            <td>{{ item.nameEn }}</td>
-            <td>
-              <!-- Edit -->
-              <button type="button" (click)="edit(item)">Editar</button>
-              @if (confirmingId() === item.id) {
-                <!-- Sure? Yes / No -->
-                <span>¿Seguro?</span>
-                <button type="button" (click)="confirmDelete(item.id)">Sí</button>
-                <button type="button" (click)="cancelDelete()">No</button>
-              } @else {
-                <!-- Delete -->
-                <button type="button" (click)="askDelete(item.id)">Eliminar</button>
-              }
-            </td>
+            <th scope="col">Nombre (ES)</th>
+            <th scope="col">Nombre (EN)</th>
+            <th scope="col">Acciones</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr>
+              <td>{{ item.nameEs }}</td>
+              <td>{{ item.nameEn }}</td>
+              <td>
+                <div class="adm-row-actions">
+                  <!-- Edit -->
+                  <button type="button" class="adm-btn adm-btn--link" (click)="edit(item)">
+                    Editar
+                  </button>
+                  @if (confirmingId() === item.id) {
+                    <!-- Sure? Yes / No -->
+                    <span>¿Seguro?</span>
+                    <button
+                      type="button"
+                      class="adm-btn adm-btn--danger"
+                      (click)="confirmDelete(item.id)"
+                    >
+                      Sí
+                    </button>
+                    <button type="button" class="adm-btn" (click)="cancelDelete()">No</button>
+                  } @else {
+                    <!-- Delete -->
+                    <button
+                      type="button"
+                      class="adm-btn adm-btn--danger"
+                      (click)="askDelete(item.id)"
+                    >
+                      Eliminar
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </section>

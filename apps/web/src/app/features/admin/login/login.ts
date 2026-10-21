@@ -5,6 +5,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { finalize, timer } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
+import { BRAND } from '../../../core/brand.config';
 import { SeoService } from '../../../core/seo.service';
 
 const WAKING_NOTICE_DELAY_MS = 3000;
@@ -17,6 +18,7 @@ const WAKING_NOTICE_DELAY_MS = 3000;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Login {
+  protected readonly brand = BRAND;
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(NonNullableFormBuilder);
@@ -31,7 +33,7 @@ export class Login {
   protected readonly errorMessage = signal<string | null>(null);
 
   constructor() {
-    inject(SeoService).setPage({ title: 'Administración · Lienzo', noindex: true });
+    inject(SeoService).setPage({ title: `Administración · ${BRAND.name}`, noindex: true });
 
     // Despierta la API sin esperar; si tarda, avisa al usuario
     const noticeTimer = timer(WAKING_NOTICE_DELAY_MS).subscribe(() => this.waking.set(true));
