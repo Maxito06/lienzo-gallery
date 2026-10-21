@@ -16,6 +16,7 @@ import { SeoService } from '../../core/seo.service';
 import { ArtworkCard } from './artwork-card';
 import { FilterChange, GalleryFilters } from './gallery-filters';
 import { FilterValues, STATUS_VALUES } from './gallery-filters.model';
+import { pageItems } from './pagination';
 import {
   PublicArtworkPage,
   PublicCatalogService,
@@ -157,6 +158,8 @@ export class GalleryPage {
       queryParamsHandling: 'merge',
     });
   }
+
+  protected readonly pageNumbers = pageItems;
 
   protected retry(): void {
     this.retry$.next();

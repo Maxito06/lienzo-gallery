@@ -59,17 +59,32 @@
                 <button
                   type="button"
                   [disabled]="current.data.page <= 1"
+                  [attr.aria-disabled]="current.data.page <= 1"
                   (click)="goToPage(current.data.page - 1)"
                 >
                   Anterior
                 </button>
-                <span class="current">
-                  Página {{ current.data.page }} de {{ current.data.totalPages }}
-                </span>
+                @for (item of pageNumbers(current.data.page, current.data.totalPages); track $index) {
+                  @if (item === 'gap') {
+                    <span class="gap" aria-hidden="true">…</span>
+                  } @else {
+                    <!-- Button: Page N -->
+                    <button
+                      type="button"
+                      [class.current]="item === current.data.page"
+                      [attr.aria-current]="item === current.data.page ? 'page' : null"
+                      [attr.aria-label]="'Página ' + item"
+                      (click)="goToPage(item)"
+                    >
+                      {{ item }}
+                    </button>
+                  }
+                }
                 <!-- Next -->
                 <button
                   type="button"
                   [disabled]="current.data.page >= current.data.totalPages"
+                  [attr.aria-disabled]="current.data.page >= current.data.totalPages"
                   (click)="goToPage(current.data.page + 1)"
                 >
                   Siguiente

@@ -1,0 +1,133 @@
+:host {
+  display: block;
+}
+
+.stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--color-surface);
+  touch-action: pan-y;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+}
+
+.room {
+  position: absolute;
+  height: auto;
+}
+
+.artwork {
+  position: absolute;
+  object-fit: cover;
+  box-shadow:
+    0 2px 3px rgba(60, 50, 40, 0.3),
+    0 16px 22px -10px rgba(60, 50, 40, 0.4);
+}
+
+.solo {
+  position: absolute;
+  inset: 6% 8%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.solo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 18px 28px -12px rgba(0, 0, 0, 0.35);
+}
+
+.no-image {
+  color: var(--color-ink-muted);
+  font-size: 14px;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.prev {
+  left: 12px;
+}
+
+.next {
+  right: 12px;
+}
+
+.note {
+  margin: 12px 0 0;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+
+.modes {
+  display: inline-flex;
+  margin-top: 16px;
+}
+
+.modes button {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--color-ink);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.modes button + button {
+  border-left: 0;
+}
+
+.modes button[aria-pressed='true'] {
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+
+.thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thumbnails button {
+  display: block;
+  padding: 0;
+  border: 2px solid var(--color-line);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.thumbnails button[aria-current='true'] {
+  border-color: var(--color-ink);
+}
+
+.thumbnails img {
+  display: block;
+  width: 84px;
+  height: 63px;
+  object-fit: cover;
+}

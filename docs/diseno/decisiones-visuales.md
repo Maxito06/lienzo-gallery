@@ -7,3 +7,12 @@
 - **Cartela discreta** en cada tarjeta: título, técnica, año y estado. La descripción solo aparece en el detalle.
 - **El toque de "casa"** vive únicamente en la página de detalle. Próxima pasada: la primera foto colgada sobre una foto de sala a escala real, con alternancia a "Solo la obra".
 - **Filtros en desplegables**, para que escalen si aparecen más técnicas o series. En móvil se agrupan en un diálogo a pantalla completa.
+
+## Vista en pared
+
+- La foto principal de la obra se monta sobre una foto de sala a escala real, usando `widthCm` y `heightCm`. El sofá de 2,1 m sirve de referencia.
+- **Calibración** (`ROOM_SCENE` en `apps/web/src/app/core/room-scene.config.ts`): en la foto de la sala, el sofá (210 cm) mide 965 px de 1998 px de ancho. El escenario (4/3, `overflow: hidden`) recorta la foto con `width` 142,6 %, `left` −21,4 % y `top` −6,2 %.
+- **Fórmulas** (porcentajes del escenario): ancho = 0,3288 × ancho en cm; `left` = 50,9 − 0,1644 × ancho en cm; `top` = 50,5 − 0,4383 × alto en cm. El alto sale de `aspect-ratio: ancho / alto` en CSS. Ejemplo: 100 × 75 cm da ancho 32,9 %, `left` 34,46 % y `top` 17,6 %.
+- Se puede alternar a "Solo la obra". Si no hay medidas, o la obra no cabe (`top` < 3 %, ancho > 80 % o `left` < 3 %), no hay vista de pared ni selector: solo se muestra la foto.
+- La imagen de la sala es una imagen generada con IA, propiedad del dueño, y está en `apps/web/public/images/sala-demo.jpg`.
+- No añade peso relevante: es un único archivo cacheable, y la foto de la obra reutiliza los anchos de Cloudinary que ya existían (600 y 1200).

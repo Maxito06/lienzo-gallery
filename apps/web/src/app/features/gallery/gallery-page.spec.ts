@@ -247,7 +247,8 @@ describe('GalleryPage', () => {
     respond(pageOf([artwork()], 1, 2));
     expect(button('Anterior').disabled).toBe(true);
     expect(button('Siguiente').disabled).toBe(false);
-    expect(root.textContent).toContain('Página 1 de 2');
+    expect(root.querySelector('nav.pagination [aria-current="page"]')?.textContent?.trim()).toBe('1');
+    expect(root.querySelectorAll('nav.pagination button').length).toBe(4);
 
     params.next(convertToParamMap({ page: '2' }));
     respond(pageOf([artwork()], 2, 2));
@@ -284,5 +285,36 @@ describe('GalleryPage', () => {
     ]);
     expect(images[0].getAttribute('fetchpriority')).toBe('high');
     expect(images[1].hasAttribute('fetchpriority')).toBe(false);
+  });
+});
+
+describe('GalleryPage pagination', () => {
+  it('navigates to a numbered page', async () => {
+    const navigate = vi.fn().mockResolvedValue(true);
+    const params = new BehaviorSubject(convertToParamMap({}));
+    TestBed.configureTestingModule({
+      imports: [GalleryPage],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ActivatedRoute, useValue: { queryParamMap: params.asObservable() } },
+      ],
+    });
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockImplementation(navigate as never);
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(GalleryPage);
+    fixture.detectChanges();
+    http.expectOne('/api/public/techniques').flush([]);
+    http.expectOne('/api/public/series').flush([]);
+    http.expectOne((r) => r.url === '/api/public/artworks').flush(pageOf([artwork()], 1, 3));
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    root.querySelector<HTMLButtonElement>('button[aria-label="Página 3"]')!.click();
+    expect(navigate).toHaveBeenCalledWith([], {
+      queryParams: { page: 3 },
+      queryParamsHandling: 'merge',
+    });
+    http.verify();
   });
 });

@@ -1,0 +1,106 @@
+<div
+  class="viewer"
+  role="group"
+  aria-roledescription="carrusel"
+  [attr.aria-label]="'Imágenes de ' + title()"
+  tabindex="0"
+  (keydown.arrowleft)="previous()"
+  (keydown.arrowright)="next()"
+>
+  <div
+    class="stage"
+    (pointerdown)="onPointerDown($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerCancel()"
+  >
+    @if (current(); as image) {
+      @if (showWall() && placement(); as place) {
+        <div class="scene" role="img" [attr.aria-label]="sceneLabel()">
+          <img
+            class="room"
+            [src]="room.src"
+            [attr.alt]="room.alt"
+            loading="eager"
+            fetchpriority="high"
+            [style.width.%]="room.imageStyle.width"
+            [style.left.%]="room.imageStyle.left"
+            [style.top.%]="room.imageStyle.top"
+          />
+          @if (imageUrl(image.cloudinaryPublicId, sceneWidth); as url) {
+            <img
+              class="artwork"
+              [src]="url"
+              alt=""
+              loading="eager"
+              [style.left.%]="place.left"
+              [style.top.%]="place.top"
+              [style.width.%]="place.width"
+              [style.aspect-ratio]="aspectRatio()"
+            />
+          }
+        </div>
+      } @else {
+        <div class="solo">
+          @if (imageUrl(image.cloudinaryPublicId, fullWidth); as url) {
+            <img
+              [src]="url"
+              [alt]="title() + ' — foto ' + (index() + 1) + ' de ' + images().length"
+              [attr.loading]="index() === 0 ? 'eager' : 'lazy'"
+              [attr.fetchpriority]="index() === 0 ? 'high' : null"
+            />
+          } @else {
+            <span class="no-image">Sin imagen</span>
+          }
+        </div>
+      }
+    }
+
+    @if (images().length > 1) {
+      <!-- Button: Previous photo -->
+      <button type="button" class="arrow prev" aria-label="Foto anterior" (click)="previous()">
+        <span aria-hidden="true">‹</span>
+      </button>
+      <!-- Button: Next photo -->
+      <button type="button" class="arrow next" aria-label="Foto siguiente" (click)="next()">
+        <span aria-hidden="true">›</span>
+      </button>
+    }
+  </div>
+
+  @if (showWall()) {
+    <p class="note">{{ scaleNote() }}</p>
+  }
+
+  @if (index() === 0 && placement()) {
+    <div class="modes" role="group" aria-label="Modo de vista">
+      <!-- Button: On the wall -->
+      <button type="button" [attr.aria-pressed]="mode() === 'wall'" (click)="setMode('wall')">
+        En la pared
+      </button>
+      <!-- Button: Artwork only -->
+      <button type="button" [attr.aria-pressed]="mode() === 'only'" (click)="setMode('only')">
+        Solo la obra
+      </button>
+    </div>
+  }
+
+  @if (images().length > 1) {
+    <ul class="thumbnails">
+      @for (image of images(); track image.cloudinaryPublicId; let i = $index) {
+        <li>
+          <!-- Button: Show photo N -->
+          <button
+            type="button"
+            [attr.aria-label]="'Foto ' + (i + 1)"
+            [attr.aria-current]="i === index() ? 'true' : null"
+            (click)="select(i)"
+          >
+            @if (imageUrl(image.cloudinaryPublicId, thumbWidth); as thumb) {
+              <img [src]="thumb" alt="" loading="lazy" />
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

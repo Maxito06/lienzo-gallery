@@ -1,3 +1,27 @@
 section {
-  padding: 2rem 0;
+  padding: 72px 0;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1.05;
+}
+
+p {
+  margin: 16px 0 32px;
+  color: var(--color-ink-muted);
+  font-size: 16px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 16px 24px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
 }

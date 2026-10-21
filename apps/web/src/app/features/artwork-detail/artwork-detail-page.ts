@@ -14,12 +14,13 @@ import { Subject, catchError, map, merge, of, switchMap, tap } from 'rxjs';
 import { ARTWORK_STATUS_LABELS } from '../../core/artworks.service';
 import { BRAND } from '../../core/brand.config';
 import { cloudinaryImageUrl } from '../../core/cloudinary.config';
+import { toPositiveNumber } from '../../core/room-scene.config';
 import { whatsappLink } from '../../core/contact.config';
 import { PublicArtworkDetail, PublicCatalogService } from '../../core/public-catalog.service';
+import { ArtworkViewer } from './artwork-viewer';
 import { SeoService, truncateDescription } from '../../core/seo.service';
 
 const MAIN_IMAGE_WIDTH = 1200;
-const THUMB_IMAGE_WIDTH = 120;
 const FALLBACK_DESCRIPTION = `Obra de la galería ${BRAND.name}.`;
 
 type DetailState =
@@ -37,7 +38,7 @@ const priceFormat = new Intl.NumberFormat('es-CO', {
 
 @Component({
   selector: 'app-artwork-detail-page',
-  imports: [RouterLink],
+  imports: [RouterLink, ArtworkViewer],
   templateUrl: './artwork-detail-page.html',
   styleUrl: './artwork-detail-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,26 +55,27 @@ export class ArtworkDetailPage {
 
   protected readonly statusLabels = ARTWORK_STATUS_LABELS;
   protected readonly state = signal<DetailState>({ kind: 'loading' });
-  protected readonly index = signal(0);
 
   protected readonly artwork = computed(() => {
     const state = this.state();
     return state.kind === 'ready' ? state.artwork : null;
   });
-  protected readonly images = computed(() =>
-    [...(this.artwork()?.images ?? [])].sort((a, b) => a.position - b.position),
-  );
-  protected readonly currentImage = computed(() => this.images()[this.index()] ?? null);
+  // La principal va primero; el resto conserva el orden por posición
+  protected readonly images = computed(() => {
+    const sorted = [...(this.artwork()?.images ?? [])].sort((a, b) => a.position - b.position);
+    const primary = sorted.find((image) => image.isPrimary) ?? sorted[0];
+    return primary ? [primary, ...sorted.filter((image) => image !== primary)] : [];
+  });
   protected readonly whatsapp = computed(() => {
     const artwork = this.artwork();
     return artwork ? whatsappLink(artwork.title) : null;
   });
   protected readonly dimensions = computed(() => {
-    const artwork = this.artwork();
-    if (!artwork || artwork.widthCm === null || artwork.heightCm === null) {
-      return null;
-    }
-    return `${numberFormat.format(artwork.widthCm)} × ${numberFormat.format(artwork.heightCm)} cm`;
+    const width = toPositiveNumber(this.artwork()?.widthCm);
+    const height = toPositiveNumber(this.artwork()?.heightCm);
+    return width && height
+      ? `${numberFormat.format(width)} × ${numberFormat.format(height)} cm`
+      : null;
   });
   protected readonly price = computed(() => {
     const price = this.artwork()?.referencePriceCop;
@@ -118,40 +120,10 @@ export class ArtworkDetailPage {
     this.retry$.next();
   }
 
-  protected next(): void {
-    this.move(1);
-  }
-
-  protected previous(): void {
-    this.move(-1);
-  }
-
-  protected select(index: number): void {
-    this.index.set(index);
-  }
-
-  protected imageUrl(publicId: string, width: number): string | null {
-    return cloudinaryImageUrl(publicId, width);
-  }
-
-  protected readonly mainWidth = MAIN_IMAGE_WIDTH;
-  protected readonly thumbWidth = THUMB_IMAGE_WIDTH;
-
-  // Navegación circular
-  private move(step: number): void {
-    const total = this.images().length;
-    if (total > 1) {
-      this.index.update((i) => (i + step + total) % total);
-    }
-  }
-
   private applyState(state: DetailState): void {
     this.state.set(state);
     if (state.kind === 'ready') {
-      const images = [...state.artwork.images].sort((a, b) => a.position - b.position);
-      // Empieza en la imagen principal
-      this.index.set(Math.max(0, images.findIndex((image) => image.isPrimary)));
-      this.applyMeta(state.artwork, images[this.index()]?.cloudinaryPublicId ?? null);
+      this.applyMeta(state.artwork, this.images()[0]?.cloudinaryPublicId ?? null);
     } else if (state.kind === 'notFound') {
       if (this.responseInit) {
         this.responseInit.status = 404;

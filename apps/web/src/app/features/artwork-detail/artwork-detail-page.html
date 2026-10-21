@@ -1,123 +1,82 @@
-<section>
+<section class="page">
   @switch (state().kind) {
     @case ('loading') {
-      <p>Cargando obra…</p>
+      <p class="message">Cargando obra…</p>
     }
     @case ('notFound') {
-      <p>Obra no encontrada.</p>
-      <!-- Back to gallery -->
-      <a routerLink="/">Volver a la galería</a>
+      <div class="message">
+        <p>Obra no encontrada.</p>
+        <!-- Back to gallery -->
+        <a class="back" routerLink="/">Volver a la galería</a>
+      </div>
     }
     @case ('error') {
-      <div role="alert">
+      <div role="alert" class="message">
         <p>No se pudo cargar la obra. Inténtalo de nuevo.</p>
         <!-- Retry -->
-        <button type="button" (click)="retry()">Reintentar</button>
+        <button type="button" class="text-button" (click)="retry()">Reintentar</button>
       </div>
     }
     @default {
       @if (artwork(); as art) {
         <!-- Back to gallery -->
-        <a routerLink="/">← Volver a la galería</a>
-        <article>
-          <section
-            class="carousel"
-            role="group"
-            aria-roledescription="carrusel"
-            [attr.aria-label]="'Imágenes de ' + art.title"
-            tabindex="0"
-            (keydown.arrowleft)="previous()"
-            (keydown.arrowright)="next()"
-          >
-            @if (currentImage(); as image) {
-              @if (imageUrl(image.cloudinaryPublicId, mainWidth); as url) {
-                <img
-                  class="main-image"
-                  [src]="url"
-                  [alt]="art.title + ' — imagen ' + (index() + 1) + ' de ' + images().length"
-                />
-              } @else {
-                <div class="no-image">Sin imagen</div>
-              }
-            } @else {
-              <div class="no-image">Sin imagen</div>
-            }
+        <a class="back" routerLink="/">← Volver a la galería</a>
+        <article class="layout">
+          <app-artwork-viewer
+            class="viewer"
+            [images]="images()"
+            [title]="art.title"
+            [widthCm]="art.widthCm"
+            [heightCm]="art.heightCm"
+          />
 
-            @if (images().length > 1) {
-              <!-- Previous -->
-              <button type="button" (click)="previous()">Anterior</button>
-              <!-- Next -->
-              <button type="button" (click)="next()">Siguiente</button>
-            }
-            <p aria-live="polite">Imagen {{ index() + 1 }} de {{ images().length }}</p>
+          <div class="info">
+            <h1>{{ art.title }}</h1>
+            <p class="details">
+              {{ art.technique.nameEs }}@if (art.year) { · {{ art.year }}}
+            </p>
+            <p class="status" [attr.data-status]="art.status">{{ statusLabels[art.status] }}</p>
 
-            @if (images().length > 1) {
-              <ul class="thumbnails">
-                @for (image of images(); track image.cloudinaryPublicId; let i = $index) {
-                  <li>
-                    <!-- Show image N -->
-                    <button
-                      type="button"
-                      [attr.aria-label]="'Ver imagen ' + (i + 1)"
-                      [attr.aria-current]="i === index() ? 'true' : null"
-                      (click)="select(i)"
-                    >
-                      @if (imageUrl(image.cloudinaryPublicId, thumbWidth); as thumb) {
-                        <img
-                          [src]="thumb"
-                          [alt]="art.title + ' — imagen ' + (i + 1) + ' de ' + images().length"
-                          loading="lazy"
-                        />
-                      } @else {
-                        Sin imagen
-                      }
-                    </button>
-                  </li>
+            @if (dimensions() || art.series || price()) {
+              <dl>
+                @if (dimensions(); as size) {
+                  <dt>Medidas</dt>
+                  <dd>{{ size }}</dd>
                 }
-              </ul>
+                @if (art.series; as series) {
+                  <dt>Serie</dt>
+                  <dd>
+                    <!-- View series in the gallery -->
+                    <a routerLink="/" [queryParams]="{ series: series.slug }">{{
+                      series.nameEs
+                    }}</a>
+                  </dd>
+                }
+                @if (price(); as value) {
+                  <dt>Precio de referencia</dt>
+                  <dd>{{ value }}</dd>
+                }
+              </dl>
             }
-          </section>
 
-          <h1>{{ art.title }}</h1>
-          <dl>
-            <dt>Técnica</dt>
-            <dd>{{ art.technique.nameEs }}</dd>
-            @if (art.series; as series) {
-              <dt>Serie</dt>
-              <dd>
-                <!-- View series in the gallery -->
-                <a routerLink="/" [queryParams]="{ series: series.slug }">{{ series.nameEs }}</a>
-              </dd>
+            @if (art.descriptionEs) {
+              <p class="description">{{ art.descriptionEs }}</p>
             }
-            @if (art.year) {
-              <dt>Año</dt>
-              <dd>{{ art.year }}</dd>
-            }
-            @if (dimensions(); as size) {
-              <dt>Medidas</dt>
-              <dd>{{ size }}</dd>
-            }
-            <dt>Estado</dt>
-            <dd>{{ statusLabels[art.status] }}</dd>
-          </dl>
 
-          @if (price(); as value) {
-            <p>Precio de referencia: {{ value }}</p>
-          }
-          @if (art.descriptionEs) {
-            <p class="description">{{ art.descriptionEs }}</p>
-          }
-          @if (art.isDemo) {
-            <!-- Proyecto de portafolio con obras de dominio público -->
-            <p class="demo">Obra de demostración: proyecto de portafolio con obras de dominio público.</p>
-          }
+            @if (art.status === 'SOLD') {
+              <p class="sold">Esta obra ya fue vendida.</p>
+            } @else if (whatsapp(); as link) {
+              <!-- Ask on WhatsApp -->
+              <a class="whatsapp" [href]="link" target="_blank" rel="noopener noreferrer"
+                >Preguntar por esta obra en WhatsApp</a
+              >
+            }
 
-          @if (art.status === 'SOLD') {
-            <p>Esta obra ya fue vendida.</p>
-          } @else if (whatsapp(); as link) {
-            <!-- Ask on WhatsApp -->
-            <a [href]="link" target="_blank" rel="noopener noreferrer">Consultar por WhatsApp</a>
-          }
+            @if (art.isDemo) {
+              <!-- Public domain artwork, part of the demo gallery -->
+              <p class="demo">Obra de dominio público, parte de la galería de demostración.</p>
+            }
+          </div>
         </article>
       }
     }

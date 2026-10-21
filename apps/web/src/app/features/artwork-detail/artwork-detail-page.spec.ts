@@ -56,8 +56,6 @@ describe('ArtworkDetailPage', () => {
   const button = (text: string) =>
     Array.from(root.querySelectorAll('button')).find((b) => b.textContent?.trim() === text)!;
 
-  const mainImage = () => root.querySelector('img.main-image') as HTMLImageElement;
-
   beforeEach(() => {
     params = new BehaviorSubject(convertToParamMap({ slug: 'sunset' }));
     TestBed.configureTestingModule({
@@ -84,10 +82,10 @@ describe('ArtworkDetailPage', () => {
     expect(text).toContain('2020');
     expect(text).toContain('50,5 × 40 cm');
     expect(text).toContain('Disponible');
-    expect(text).toMatch(/Precio de referencia: \$\s500\.000/);
+    expect(text).toMatch(/Precio de referencia\s*\$\s500\.000/);
     expect(text).toContain('Una puesta de sol.');
     expect(text).toContain(
-      'Obra de demostración: proyecto de portafolio con obras de dominio público.',
+      'Obra de dominio público, parte de la galería de demostración.',
     );
     expect(root.querySelector('a[href="/?series=cielos"]')?.textContent).toContain('Cielos');
   });
@@ -117,42 +115,39 @@ describe('ArtworkDetailPage', () => {
     expect(root.querySelector('h1')?.textContent).toBe('Sunset');
   });
 
-  it('starts the carousel on the primary image', () => {
+  it('passes the primary image first to the viewer', () => {
     load(detail());
-    expect(mainImage().src).toContain('img-b');
-    expect(mainImage().getAttribute('alt')).toBe('Sunset — imagen 2 de 3');
-    expect(mainImage().hasAttribute('loading')).toBe(false);
-    expect(root.textContent).toContain('Imagen 2 de 3');
-  });
-
-  it('moves to the next image and wraps around', () => {
-    load(detail());
-    button('Siguiente').click();
-    fixture.detectChanges();
-    expect(mainImage().src).toContain('img-c');
-    button('Siguiente').click();
-    fixture.detectChanges();
-    expect(mainImage().src).toContain('img-a');
-    button('Anterior').click();
-    fixture.detectChanges();
-    expect(mainImage().src).toContain('img-c');
-  });
-
-  it('shows the thumbnails only when there are several images', () => {
-    load(detail());
+    const room = root.querySelector('app-artwork-viewer img.room');
+    expect(room).not.toBeNull();
+    expect(root.querySelector('app-artwork-viewer img.artwork')?.getAttribute('src')).toContain('img-b');
     expect(root.querySelectorAll('.thumbnails button').length).toBe(3);
-    expect(
-      root.querySelector('.thumbnails [aria-current="true"]')?.getAttribute('aria-label'),
-    ).toBe('Ver imagen 2');
+  });
 
-    params.next(convertToParamMap({ slug: 'solo' }));
-    const single = [{ cloudinaryPublicId: 'only', position: 0, isPrimary: true }];
+  it('shows measurements, series and price only when present', () => {
+    load(detail());
+    const text = root.textContent ?? '';
+    expect(text).toContain('Medidas');
+    expect(text).toContain('Serie');
+    expect(text).toContain('Precio de referencia');
+
+    params.next(convertToParamMap({ slug: 'bare' }));
     httpTesting
-      .expectOne('/api/public/artworks/solo')
-      .flush(detail({ slug: 'solo', images: single }));
+      .expectOne('/api/public/artworks/bare')
+      .flush(
+        detail({
+          slug: 'bare',
+          widthCm: null,
+          heightCm: null,
+          series: null,
+          referencePriceCop: null,
+          descriptionEs: null,
+          isDemo: false,
+        }),
+      );
     fixture.detectChanges();
-    expect(root.querySelector('.thumbnails')).toBeNull();
-    expect(root.textContent).not.toContain('Siguiente');
+    expect(root.querySelector('dl')).toBeNull();
+    expect(root.querySelector('.description')).toBeNull();
+    expect(root.querySelector('.demo')).toBeNull();
   });
 
   it('shows the sold notice instead of the WhatsApp link when sold', () => {
