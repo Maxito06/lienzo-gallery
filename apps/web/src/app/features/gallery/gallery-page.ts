@@ -94,6 +94,8 @@ export class GalleryPage {
     inject(SeoService).setPage({
       title: `Galería · ${BRAND.name}`,
       description: 'Galería de arte con obras de dominio público: pinturas, técnicas y series.',
+      // El canonical es siempre '/': sin filtros ni página
+      path: '/',
     });
 
     // switchMap cancela la petición anterior cuando cambia la URL

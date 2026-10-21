@@ -149,3 +149,22 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - Purga de la caché de Netlify al publicar, retirar o editar una obra (RF-19) y cabeceras de caché de las rutas públicas.
 - Migraciones de Prisma en el pipeline de Render (hoy no hay un paso que las aplique).
 - Comprobar en producción el SSR dinámico, el login a través del proxy y el CORS de la subida directa a Cloudinary.
+
+
+## SEO y mensajes de WhatsApp
+
+### Hecho
+
+- `brand.config.ts` ahora guarda `siteUrl` (`https://lienzo-gallery.netlify.app`, sin barra final) y `whatsappNumber`. Ambos son datos públicos que se compilan en el sitio; cada despliegue de un cliente los cambia en ese archivo. `contact.config.ts` los lee de `BRAND` y ya no tiene el número escrito (`WHATSAPP_NUMBER` sigue exportado como alias).
+- Mensajes de WhatsApp: `whatsappLink(titulo, slug)` incluye el título y el enlace absoluto de la obra (`siteUrl/obras/slug`), codificado con `encodeURIComponent`. El mensaje general y el de encargo no cambiaron. Todo está en español.
+- `SeoService.setPage` acepta `path`. Si la página es indexable crea o actualiza `<link rel="canonical">` y `og:url` con `siteUrl + path`; si es `noindex` o no hay `path`, ambos se eliminan. El canonical de la galería es siempre `/` (sin filtros ni página); el del detalle es `/obras/<slug>`; la 404 sigue `noindex` y sin canonical.
+- JSON-LD `VisualArtwork` en el detalle (`SeoService.setArtworkStructuredData`): nombre, imagen (Cloudinary, ancho 1200), url canónica, técnica (`artform`), año (`dateCreated`), medidas en cm solo si existen y descripción solo si existe. No lleva precio ni ofertas. Se serializa escapando `<` como `<` y se crea/actualiza sin duplicar la etiqueta; cada `setPage` la elimina, así que no sobrevive en otra página. Usa `DOCUMENT` y `Renderer2`, por lo que funciona en SSR.
+- `public/robots.txt`: permite todo, bloquea `/admin/` e indica el sitemap. El build lo copia a `dist/lienzo-web/browser`.
+- `sitemap.xml` se genera en la Edge Function `netlify/edge-functions/sitemap.ts` (registrada en `netlify.toml`) a partir del listado público `/public/artworks` (páginas de 48, tope de 50 páginas, timeout de 20 s). No hay endpoint nuevo en la API. Incluye la portada y una entrada por obra publicada; no lleva `<lastmod>` porque el listado público no devuelve fecha. Si la API falla responde 503 con `no-store`. La URL del sitio sale de la variable `SITE_URL` de Netlify y, si falta, de una constante que debe coincidir con `BRAND.siteUrl`.
+- La construcción del XML (`buildSitemapXml`) es una función pura, pero no tiene prueba: Vitest solo recorre `src/` vía `ng test` y no hay forma de probarla sin cambiar la configuración.
+
+### Pendientes
+
+- Cuando se active el inglés: añadir al mensaje de WhatsApp una línea adicional en español para visitantes en inglés.
+- Si se añade caché a las rutas públicas o al sitemap, purgarla al publicar, retirar o editar una obra (RF-19).
+- Con dominio propio: cambiar `siteUrl` en `brand.config.ts`, `Sitemap:` en `robots.txt`, la constante/variable `SITE_URL` del sitemap y `security.allowedHosts` en `angular.json`.

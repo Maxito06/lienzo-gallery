@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { BRAND } from '../../core/brand.config';
 import { TestBed } from '@angular/core/testing';
 import { RESPONSE_INIT } from '@angular/core';
@@ -27,6 +28,9 @@ describe('NotFoundPage', () => {
     fixture.detectChanges();
     expect(TestBed.inject(Title).getTitle()).toBe(`Página no encontrada · ${BRAND.name}`);
     expect(TestBed.inject(Meta).getTag("name='robots'")?.content).toBe('noindex');
+    const head = TestBed.inject(DOCUMENT).head;
+    expect(head.querySelector("link[rel='canonical']")).toBeNull();
+    expect(head.querySelector("script[type='application/ld+json']")).toBeNull();
     expect(
       (fixture.nativeElement as HTMLElement).querySelector('a')?.getAttribute('href'),
     ).toBe('/');

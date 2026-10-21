@@ -68,7 +68,7 @@ export class ArtworkDetailPage {
   });
   protected readonly whatsapp = computed(() => {
     const artwork = this.artwork();
-    return artwork ? whatsappLink(artwork.title) : null;
+    return artwork ? whatsappLink(artwork.title, artwork.slug) : null;
   });
   protected readonly dimensions = computed(() => {
     const width = toPositiveNumber(this.artwork()?.widthCm);
@@ -142,6 +142,17 @@ export class ArtworkDetailPage {
       description,
       image: image ?? undefined,
       type: 'article',
+      path: `/obras/${artwork.slug}`,
+    });
+    this.seo.setArtworkStructuredData({
+      title: artwork.title,
+      slug: artwork.slug,
+      image,
+      technique: artwork.technique.nameEs,
+      year: artwork.year,
+      widthCm: toPositiveNumber(artwork.widthCm),
+      heightCm: toPositiveNumber(artwork.heightCm),
+      description: artwork.descriptionEs,
     });
   }
 }

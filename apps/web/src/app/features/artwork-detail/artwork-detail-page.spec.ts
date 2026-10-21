@@ -1,3 +1,5 @@
+import { DOCUMENT } from '@angular/common';
+import { WHATSAPP_NUMBER } from '../../core/contact.config';
 import { BRAND } from '../../core/brand.config';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -166,5 +168,46 @@ describe('ArtworkDetailPage', () => {
     expect(meta.getTag("property='og:image'")?.content).toContain('img-b');
     expect(meta.getTag("name='twitter:card'")?.content).toBe('summary_large_image');
     expect(meta.getTag("name='robots'")).toBeNull();
+  });
+
+  it('sets the canonical URL and the VisualArtwork JSON-LD without price', () => {
+    load(detail());
+    const head = TestBed.inject(DOCUMENT).head;
+    expect(head.querySelector("link[rel='canonical']")?.getAttribute('href')).toBe(
+      `${BRAND.siteUrl}/obras/sunset`,
+    );
+    expect(TestBed.inject(Meta).getTag("property='og:url'")?.content).toBe(
+      `${BRAND.siteUrl}/obras/sunset`,
+    );
+    const scripts = head.querySelectorAll("script[type='application/ld+json']");
+    expect(scripts.length).toBe(1);
+    const data = JSON.parse(scripts[0].textContent!);
+    expect(data['@type']).toBe('VisualArtwork');
+    expect(data.name).toBe('Sunset');
+    expect(data.artform).toBe('Óleo');
+    expect(data.dateCreated).toBe('2020');
+    expect(data.image).toContain('w_1200/img-b');
+    expect(data.width.value).toBe(50.5);
+    expect(scripts[0].textContent).not.toMatch(/price|offers/i);
+  });
+
+  it('has no canonical or JSON-LD when the artwork is not found', () => {
+    start();
+    httpTesting.expectOne(url).flush({}, { status: 404, statusText: 'Not Found' });
+    const head = TestBed.inject(DOCUMENT).head;
+    expect(head.querySelector("link[rel='canonical']")).toBeNull();
+    expect(head.querySelector("script[type='application/ld+json']")).toBeNull();
+  });
+
+  it('puts the title and the artwork URL in the WhatsApp message', () => {
+    load(detail());
+    const link = root.querySelector<HTMLAnchorElement>('a[href^="https://wa.me/"]');
+    if (WHATSAPP_NUMBER) {
+      const text = decodeURIComponent(new URL(link!.href).searchParams.get('text')!);
+      expect(text).toContain('Sunset');
+      expect(text).toContain(`${BRAND.siteUrl}/obras/sunset`);
+    } else {
+      expect(link).toBeNull();
+    }
   });
 });

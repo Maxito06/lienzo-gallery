@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -84,6 +85,16 @@ describe('GalleryPage', () => {
     expect(cards[0].textContent).toContain('Disponible');
     expect(cards[1].textContent).toContain('Sin imagen');
     expect(cards[0].querySelector('a')?.getAttribute('href')).toBe('/obras/sunset');
+  });
+
+  it('always uses "/" as canonical, even with filters and page, and has no JSON-LD', () => {
+    start({ series: 'flores', page: '2' });
+    respond(pageOf([artwork()], 2, 3));
+    const head = TestBed.inject(DOCUMENT).head;
+    expect(head.querySelector("link[rel='canonical']")?.getAttribute('href')).toBe(
+      `${BRAND.siteUrl}/`,
+    );
+    expect(head.querySelector("script[type='application/ld+json']")).toBeNull();
   });
 
   it('requests the API with the filters from the URL', () => {

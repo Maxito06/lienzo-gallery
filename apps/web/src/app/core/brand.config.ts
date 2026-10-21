@@ -10,4 +10,10 @@ export const BRAND = {
   credits: 'Proyecto de portafolio de Maximiliano Correa Pico',
   githubUrl: 'https://github.com/Maxito06/lienzo-gallery',
   githubLabel: 'Código en GitHub',
+  // Datos públicos que se compilan en el sitio. Cada despliegue de un cliente los cambia aquí.
+  // URL base del sitio, sin barra final (canonical, enlaces de WhatsApp y sitemap)
+  siteUrl: 'https://lienzo-gallery.netlify.app',
+  // WhatsApp en formato internacional, solo dígitos con indicativo de país (sin '+' ni espacios).
+  // Max decide qué número publicar; si está vacío, el botón de WhatsApp no se muestra.
+  whatsappNumber: '573013423836',
 } as const;

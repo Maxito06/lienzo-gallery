@@ -18,12 +18,32 @@ function expectLink(link: string | null, message: string): void {
 }
 
 describe('whatsappLink', () => {
-  it('returns a wa.me link with the encoded title, or null when no number is configured', () => {
-    expect(whatsappLink('Noche & Día') === null).toBe(!WHATSAPP_NUMBER);
-    if (WHATSAPP_NUMBER) {
-      expect(whatsappLink('Noche & Día')!.startsWith('https://wa.me/')).toBe(true);
-      expect(whatsappLink('Noche & Día')).toContain(encodeURIComponent('Noche & Día'));
+  it('reads the number from the brand config', () => {
+    expect(WHATSAPP_NUMBER).toBe(BRAND.whatsappNumber);
+  });
+
+  it('includes the number, the encoded title and the absolute artwork URL, or is null without number', () => {
+    const link = whatsappLink('Noche & Día', 'noche-y-dia');
+    if (!WHATSAPP_NUMBER) {
+      expect(link).toBeNull();
+      return;
     }
+    expect(link!.startsWith(`https://wa.me/${WHATSAPP_NUMBER}?text=`)).toBe(true);
+    expect(link).toContain(encodeURIComponent('Noche & Día'));
+    expect(link).toContain(encodeURIComponent(`${BRAND.siteUrl}/obras/noche-y-dia`));
+  });
+
+  it('encodes accents, quotes and ñ so the text survives a round trip', () => {
+    const title = 'El niño "Ñandú" y la canción';
+    const link = whatsappLink(title, 'nino-nandu');
+    if (!WHATSAPP_NUMBER) {
+      expect(link).toBeNull();
+      return;
+    }
+    const text = decodeURIComponent(new URL(link!).searchParams.get('text')!);
+    expect(text).toContain(`«${title}»`);
+    expect(text).toContain(`${BRAND.siteUrl}/obras/nino-nandu`);
+    expect(link).not.toMatch(/["ñÑó ]/);
   });
 });
 

@@ -12,3 +12,7 @@
 # El .nvmrc (Node 24) está en la raíz del repositorio, no en apps/web, así que se fija aquí
 [build.environment]
   NODE_VERSION = "24"
+
+[[edge_functions]]
+  path = "/sitemap.xml"
+  function = "sitemap"
