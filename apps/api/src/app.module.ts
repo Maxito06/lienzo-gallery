@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ArtworksController } from './admin/artworks.controller.js';
 import { ArtworkImagesController } from './admin/artwork-images.controller.js';
 import { SeriesController } from './admin/series.controller.js';
@@ -16,6 +16,7 @@ import { SessionsService } from './auth/sessions.service.js';
 import { PrismaService } from './prisma.service.js';
 import { PublicCatalogService } from './public/public-catalog.service.js';
 import { PublicController } from './public/public.controller.js';
+import { ServerErrorFilter } from './common/server-error.filter.js';
 
 @Module({
   imports: [ConfigModule.forRoot()],
@@ -37,6 +38,7 @@ import { PublicController } from './public/public.controller.js';
     PublicCatalogService,
     CloudinaryService,
     { provide: APP_GUARD, useClass: CsrfGuard },
+    { provide: APP_FILTER, useClass: ServerErrorFilter },
   ],
 })
 export class AppModule {}

@@ -168,3 +168,27 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 - Cuando se active el inglés: añadir al mensaje de WhatsApp una línea adicional en español para visitantes en inglés.
 - Si se añade caché a las rutas públicas o al sitemap, purgarla al publicar, retirar o editar una obra (RF-19).
 - Con dominio propio: cambiar `siteUrl` en `brand.config.ts`, `Sitemap:` en `robots.txt`, la constante/variable `SITE_URL` del sitemap y `security.allowedHosts` en `angular.json`.
+
+
+## Salud y monitoreo
+
+### Endpoint /health
+
+- `GET /health` responde `200 { "status": "ok" }`, es público (el guard global solo exige la cabecera CSRF en métodos que cambian estado) y envía `Cache-Control: no-store`. No consulta la base de datos ni ningún servicio externo: así un monitor puede mantener despierta la API sin gastar las horas de cómputo de Neon. No hay limitador de peticiones global, así que no hizo falta excluirlo.
+- Ya existía `GET /health/db` (mide la latencia de la base de datos); se dejó como estaba y no debe usarse para el monitor.
+
+### Registro de errores del servidor
+
+- `ServerErrorFilter` (`apps/api/src/common/server-error.filter.ts`) es un filtro global que extiende el de Nest: la respuesta al cliente no cambia.
+- Para errores con estado >= 500 escribe una línea JSON con el Logger de Nest (nivel error): `timestamp`, `method`, `path` (sin query string), `status`, `errorName`, `message` y `stack`.
+- Nunca se registran cuerpo, cabeceras, cookies, query string, correos, contraseñas ni datos del usuario. Los 4xx no se registran.
+- Los errores no controlados ya no producen además la línea de texto que Nest escribe por defecto.
+
+### Aviso de API lenta
+
+- `features/shared/slow-loading-hint` se coloca dentro del estado de carga de la galería y del detalle. Pasados 4 s sin respuesta muestra, con `role="status"`, que la galería está despertando y que la primera visita puede tardar hasta 30 s. Desaparece al llegar los datos o al fallar. El temporizador solo se crea en el navegador (`afterNextRender`) y se limpia al destruir el componente.
+
+### Mantener despierta la API
+
+- Render gratis duerme la API tras ~15 minutos sin tráfico. El dueño del proyecto debe configurar a mano un monitor externo (UptimeRobot, plan gratis) que haga una petición HTTP a `https://lienzo-api.onrender.com/health` cada 5 minutos.
+- Límites conocidos: las horas gratuitas de Render alcanzan para un solo servicio siempre despierto; si el monitor falla, la API vuelve a dormirse.

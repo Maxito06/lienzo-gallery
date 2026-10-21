@@ -2,6 +2,7 @@
   @switch (state().kind) {
     @case ('loading') {
       <p class="message">Cargando obra…</p>
+      <app-slow-loading-hint />
     }
     @case ('notFound') {
       <div class="message">

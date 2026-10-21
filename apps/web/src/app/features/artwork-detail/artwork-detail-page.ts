@@ -17,6 +17,7 @@ import { cloudinaryImageUrl } from '../../core/cloudinary.config';
 import { toPositiveNumber } from '../../core/room-scene.config';
 import { whatsappLink } from '../../core/contact.config';
 import { PublicArtworkDetail, PublicCatalogService } from '../../core/public-catalog.service';
+import { SlowLoadingHint } from '../shared/slow-loading-hint';
 import { ArtworkViewer } from './artwork-viewer';
 import { SeoService, truncateDescription } from '../../core/seo.service';
 
@@ -38,7 +39,7 @@ const priceFormat = new Intl.NumberFormat('es-CO', {
 
 @Component({
   selector: 'app-artwork-detail-page',
-  imports: [RouterLink, ArtworkViewer],
+  imports: [RouterLink, ArtworkViewer, SlowLoadingHint],
   templateUrl: './artwork-detail-page.html',
   styleUrl: './artwork-detail-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

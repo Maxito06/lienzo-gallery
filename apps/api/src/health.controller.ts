@@ -1,11 +1,13 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Header } from '@nestjs/common';
 import { PrismaService } from './prisma.service.js';
 
 @Controller('health')
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Sin base de datos ni servicios externos: un monitor puede mantener despierta la API sin gastar cómputo de Neon
   @Get()
+  @Header('Cache-Control', 'no-store')
   check() {
     return { status: 'ok' };
   }

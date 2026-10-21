@@ -13,6 +13,7 @@ import { ArtworkStatus } from '../../core/artworks.service';
 import { BRAND } from '../../core/brand.config';
 import { whatsappCommissionLink } from '../../core/contact.config';
 import { SeoService } from '../../core/seo.service';
+import { SlowLoadingHint } from '../shared/slow-loading-hint';
 import { ArtworkCard } from './artwork-card';
 import { FilterChange, GalleryFilters } from './gallery-filters';
 import { FilterValues, STATUS_VALUES } from './gallery-filters.model';
@@ -50,7 +51,7 @@ function parseFilters(params: ParamMap): GalleryQuery {
 
 @Component({
   selector: 'app-gallery-page',
-  imports: [RouterLink, ArtworkCard, GalleryFilters],
+  imports: [RouterLink, ArtworkCard, GalleryFilters, SlowLoadingHint],
   templateUrl: './gallery-page.html',
   styleUrl: './gallery-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
