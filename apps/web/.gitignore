@@ -42,3 +42,8 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Pruebas end-to-end (Playwright)
+playwright-report/
+test-results/
+e2e/.auth/

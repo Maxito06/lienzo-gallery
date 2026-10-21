@@ -192,3 +192,34 @@ Decisiones de la fase 1 cerradas con su justificación. Fuente: sección «Decis
 
 - Render gratis duerme la API tras ~15 minutos sin tráfico. El dueño del proyecto debe configurar a mano un monitor externo (UptimeRobot, plan gratis) que haga una petición HTTP a `https://lienzo-api.onrender.com/health` cada 5 minutos.
 - Límites conocidos: las horas gratuitas de Render alcanzan para un solo servicio siempre despierto; si el monitor falla, la API vuelve a dormirse.
+
+## Pruebas end-to-end
+
+Pruebas con Playwright (`apps/web/e2e/`) que recorren la web real en Chromium.
+
+### Qué cubren
+
+- `public.spec.ts`: galería (título y tarjetas), filtro por técnica con su chip y "Limpiar filtros", apertura de una obra, modos "En la pared" / "Solo la obra", enlace de WhatsApp (sin hacer clic), etiquetas SEO del detalle y de la galería (canonical, `og:url`, JSON-LD sin precio ni ofertas), página no encontrada con `noindex`, `robots.txt` y navegación con teclado en el visor.
+- `admin.spec.ts`: redirección al login sin sesión, login con credenciales falsas (error y sin sesión) y login válido hasta la lista de obras con cierre de sesión.
+
+### No escriben datos
+
+- Ninguna prueba crea, edita, publica, oculta ni borra nada: solo leen y navegan. El login válido solo abre sesión y la cierra.
+- Motivo: corren contra la API real, conectada a la rama `main` de Neon, que es la base de producción.
+- La prueba de credenciales falsas usa un correo inventado para no activar el límite de intentos del administrador. Las credenciales reales no se imprimen: el admin corre sin trazas ni capturas y los valores no pasan por los pasos del informe.
+
+### Cómo ejecutarlas
+
+1. Arrancar la API (`http://localhost:3000`) y la web (`npx ng serve` en `apps/web`, `http://localhost:4200`).
+2. Instalar el navegador una sola vez: `npx playwright install chromium`.
+3. Para las pruebas de administración, definir en la terminal (PowerShell):
+   - `$env:E2E_ADMIN_EMAIL = "..."`
+   - `$env:E2E_ADMIN_PASSWORD = "..."`
+   Si faltan, esas pruebas se saltan con el motivo "E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD not set".
+4. Desde `apps/web`: `npm run e2e` (o `npm run e2e:headed` para ver el navegador). La web puede apuntarse a otra URL con `E2E_BASE_URL`.
+5. El informe HTML queda en `playwright-report/` (ignorado por git).
+
+### Pendientes
+
+- Ejecutarlas en el pipeline (TEC-07) requerirá una API y una base de pruebas propias.
+- Pruebas de edición del administrador (crear, editar, publicar, borrar) sobre la rama `test` de Neon, nunca sobre `main`.
