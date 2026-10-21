@@ -74,6 +74,22 @@ describe('ArtworkViewer', () => {
     expect(root.querySelector('.modes')).toBeNull();
   });
 
+  it('explains why the wall view is missing only for artworks that are too large', () => {
+    const message = 'Por sus medidas, esta obra no cabe en la vista de pared de ejemplo.';
+    render({ widthCm: 400, heightCm: 300 });
+    expect(root.querySelector('.note')?.textContent).toBe(message);
+    click('button[aria-label="Foto siguiente"]');
+    expect(root.querySelector('.note')).toBeNull();
+  });
+
+  it('shows no too-large note when the artwork fits or has no measurements', () => {
+    render({});
+    expect(root.textContent).not.toContain('no cabe en la vista de pared');
+    TestBed.resetTestingModule();
+    render({ widthCm: null, heightCm: null });
+    expect(root.querySelector('.note')).toBeNull();
+  });
+
   it('toggles between the wall and the artwork only', () => {
     render({});
     const [wall, only] = Array.from(root.querySelectorAll<HTMLButtonElement>('.modes button'));

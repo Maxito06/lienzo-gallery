@@ -71,6 +71,10 @@
     <p class="note">{{ scaleNote() }}</p>
   }
 
+  @if (index() === 0 && tooLarge()) {
+    <p class="note">Por sus medidas, esta obra no cabe en la vista de pared de ejemplo.</p>
+  }
+
   @if (index() === 0 && placement()) {
     <div class="modes" role="group" aria-label="Modo de vista">
       <!-- Button: On the wall -->

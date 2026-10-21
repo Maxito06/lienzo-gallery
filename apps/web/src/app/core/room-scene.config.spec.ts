@@ -1,4 +1,9 @@
-import { ROOM_SCENE, computeWallPlacement, toPositiveNumber } from './room-scene.config';
+import {
+  ROOM_SCENE,
+  computeWallPlacement,
+  toPositiveNumber,
+  wallPlacementStatus,
+} from './room-scene.config';
 
 describe('computeWallPlacement', () => {
   it('places a 100x75 cm artwork using the calibration values', () => {
@@ -29,6 +34,27 @@ describe('computeWallPlacement', () => {
 
   it('accepts measurements that arrive as strings', () => {
     expect(computeWallPlacement('100', '75')?.width).toBeCloseTo(32.9, 1);
+  });
+});
+
+describe('wallPlacementStatus', () => {
+  it('returns ok for a normal artwork', () => {
+    expect(wallPlacementStatus(100, 75)).toBe('ok');
+  });
+
+  it('returns too-large for a huge artwork', () => {
+    expect(wallPlacementStatus(300, 100)).toBe('too-large');
+  });
+
+  it('returns too-large for a tall and narrow artwork that does not fit', () => {
+    expect(wallPlacementStatus(30, 200)).toBe('too-large');
+  });
+
+  it('returns missing for null, zero, negative or NaN measurements', () => {
+    expect(wallPlacementStatus(null, 50)).toBe('missing');
+    expect(wallPlacementStatus(0, 50)).toBe('missing');
+    expect(wallPlacementStatus(50, -10)).toBe('missing');
+    expect(wallPlacementStatus(Number.NaN, 50)).toBe('missing');
   });
 });
 

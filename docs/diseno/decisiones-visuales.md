@@ -25,3 +25,4 @@
 - Las insignias de estado siempre muestran el texto (Publicada, Borrador, Disponible, Reservada, Vendida); el color no es el único indicador. El mapeo estado → variante está en `features/admin/status-badge.ts`.
 - Sin librerías de UI ni animaciones.
 - El admin no se indexa: sus páginas fijan `noindex` mediante `SeoService`.
+- Si hay medidas válidas pero la obra no cabe en la pared (demasiado grande o muy alargada), se muestra la foto sola con una nota discreta bajo el escenario: "Por sus medidas, esta obra no cabe en la vista de pared de ejemplo." Si faltan medidas no se muestra ninguna nota.

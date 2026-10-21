@@ -1,6 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { cloudinaryImageUrl } from '../../core/cloudinary.config';
-import { ROOM_SCENE, computeWallPlacement, toPositiveNumber } from '../../core/room-scene.config';
+import {
+  ROOM_SCENE,
+  computeWallPlacement,
+  toPositiveNumber,
+  wallPlacementStatus,
+} from '../../core/room-scene.config';
 
 // Solo los anchos ya usados en Cloudinary
 const SCENE_ARTWORK_WIDTH = 600;
@@ -37,6 +42,9 @@ export class ArtworkViewer {
   protected readonly width = computed(() => toPositiveNumber(this.widthCm()));
   protected readonly height = computed(() => toPositiveNumber(this.heightCm()));
   protected readonly placement = computed(() => computeWallPlacement(this.width(), this.height()));
+  protected readonly tooLarge = computed(
+    () => wallPlacementStatus(this.width(), this.height()) === 'too-large',
+  );
   protected readonly current = computed(() => this.images()[this.index()] ?? null);
   protected readonly showWall = computed(
     () => this.index() === 0 && this.placement() !== null && this.mode() === 'wall',

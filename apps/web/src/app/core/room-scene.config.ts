@@ -30,12 +30,17 @@ export function toPositiveNumber(value: unknown): number | null {
   return typeof number === 'number' && Number.isFinite(number) && number > 0 ? number : null;
 }
 
-// Devuelve null si faltan medidas o la obra no cabe en la pared
-export function computeWallPlacement(widthCm: unknown, heightCm: unknown): WallPlacement | null {
+export type WallPlacementStatus = 'ok' | 'missing' | 'too-large';
+
+// Única regla de colocación: la comparten computeWallPlacement y wallPlacementStatus
+function evaluate(
+  widthCm: unknown,
+  heightCm: unknown,
+): { status: WallPlacementStatus; placement: WallPlacement | null } {
   const width = toPositiveNumber(widthCm);
   const height = toPositiveNumber(heightCm);
   if (width === null || height === null) {
-    return null;
+    return { status: 'missing', placement: null };
   }
   const placement = {
     width: WIDTH_PERCENT_PER_CM * width,
@@ -47,7 +52,17 @@ export function computeWallPlacement(widthCm: unknown, heightCm: unknown): WallP
     placement.width > MAX_WIDTH_PERCENT ||
     placement.left < MIN_MARGIN_PERCENT
   ) {
-    return null;
+    return { status: 'too-large', placement: null };
   }
-  return placement;
+  return { status: 'ok', placement };
+}
+
+// Devuelve null si faltan medidas o la obra no cabe en la pared
+export function computeWallPlacement(widthCm: unknown, heightCm: unknown): WallPlacement | null {
+  return evaluate(widthCm, heightCm).placement;
+}
+
+// Distingue 'sin medidas' de 'no cabe' para poder explicarlo
+export function wallPlacementStatus(widthCm: unknown, heightCm: unknown): WallPlacementStatus {
+  return evaluate(widthCm, heightCm).status;
 }
